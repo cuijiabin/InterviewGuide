@@ -24,6 +24,29 @@
 打印两个有序链表的公共部分
 【题目】 
 给定两个有序链表的头指针head1和head2，打印两个链表的公共部分。
+【代码实现】
+
+
+#python3.5
+class Node:
+    def __init__(self, val=None):
+        self.val = val
+        self.next = None
+
+def printCommonPart(head1, head2):
+    if head1 == None or head2 == None:
+        return
+    print("Common Part:", end=' ')
+    while head1 != None and head2 != None:
+        if head1.val > head2.val:
+            head2 = head2.next
+        elif head1.val < head2.val:
+            head1 = head1.next
+        else:
+            print(head1.val, end=' ')
+            head1 = head1.next
+            head2 = head2.next
+    print()
 ==========================================
 
 2.==========================================
@@ -56,6 +79,99 @@ k = 0的时候，实际上就是遍历了N - k个节点。
 此时slow就是倒数第 k 个节点的前一个节点，之后删除倒数第k个节点就很容易了。
 
 单链表和双链表删除倒数第ｋ个节点的原理是一样的，只不过是双链表删除节点的时候稍微复杂一点。
+【代码实现】
+
+#python3.5
+#单链表
+class Node:
+    def __init__(self, val=None):
+        self.val = val
+        self.next = None
+
+def removeLastKthNode1(head, k):
+    if head == None or k < 1:
+        return head
+    cur = head
+    while cur != None:
+        k -= 1
+        cur = cur.next
+    if k == 0:
+        return head.next
+    elif k < 0:
+        cur = head
+        while k+1 != 0:
+            cur = cur.next
+            k += 1
+        cur.next = cur.next.next
+    return head
+
+
+def removeLastKthNode2(head, k):
+    if head == None or k < 1:
+        return head
+    fast = slow = head
+    while k > 0:
+        k -= 1
+        if fast == None:
+            return head
+        else:
+            fast = fast.next
+    if fast == None:
+        return head.next
+    while fast.next != None:
+        fast = fast.next
+        slow = slow.next
+    slow.next = slow.next.next
+    return head
+
+#双链表
+class DoubleNode:
+    def __init__(self, val = None):
+        self.val = val
+        self.pre = None
+        self.next = None
+
+def removeLastKthDoubleNode1(head, k):
+    if head == None or k < 1:
+        return head
+    cur = head
+    while cur != None:
+        k -= 1
+        cur = cur.next
+    if k == 0:
+        head = head.next
+        head.pre = None
+    elif k < 0:
+        cur = head
+        while k+1 != 0:
+            k += 1
+            cur = cur.next
+        cur.next = cur.next.next
+        if cur.next != None:
+            cur.next.pre = cur
+    return head
+
+def removeLastKthDoubleNode2(head, k):
+    if head == None or k < 1:
+        return head
+    fast = slow = head
+    while k > 0:
+        k -= 1
+        if fast != None:
+            fast = fast.next
+        else:
+            return head
+    if fast == None:
+        head = head.next
+        head.pre = None
+    else:
+        while fast.next != None:
+            slow = slow.next
+            fast = fast.next
+        slow.next = slow.next.next
+        if slow.next != None:
+            slow.next.pre = slow
+    return head
 ==========================================
 
 3.==========================================
@@ -90,6 +206,39 @@ k = 0的时候，实际上就是遍历了N - k个节点。
 首先，根据链表的长度n，以及a与b的值确定要删除的节点是哪一个节点。计算方法如下： 
 r = math.ceil(a / b * n)，其中ceil函数是向上取整，a / b的值是浮点型。 
 知道要删除哪一个节点后，只需要找到该节点的前一个节点即可。
+【代码实现】
+
+#python3.5
+def removeMidNode(head):
+    if head == None or head.next == None:
+        return head
+    if head.next.next == None:
+        return head.next
+    pre = head
+    cur = head.next.next
+    while cur.next != None and cur.next.next != None:
+        pre = pre.next
+        cur = cur.next.next
+    pre.next = pre.next.next
+    return head
+
+def removeByRatio(head, a, b):
+    if head == None or a < 1 or a > b:
+        return head
+    n = 0
+    cur = head
+    while cur != None:
+        cur = cur.next
+        n += 1
+    n = math.ceil(a / b * n)
+    if n == 1:
+        return head.next
+    cur = head
+    while n-1 != 1:
+        cur = cur.next
+        n -= 1
+    cur.next = cur.next.next
+    return head
 ==========================================
 
 4.==========================================
@@ -97,6 +246,31 @@ r = math.ceil(a / b * n)，其中ceil函数是向上取整，a / b的值是浮�
 【题目】
 分别实现反转单向链表和反转双向链表的函数。 
 要求，时间复杂度O(N)，空间复杂度O(1)。
+【代码实现】
+
+#python3.5
+def reverseList(head):
+    if head == None:
+        return
+    pre = None
+    while head != None:
+        next = head.next
+        head.next = pre
+        pre = head
+        head = next
+    return pre
+
+def reverseDoubleList(head):
+    if head == None:
+        return
+    pre = None
+    while head != None:
+        next = head.next
+        head.next = pre
+        head.pre = next
+        pre = head
+        head = next
+    return pre
 ==========================================
 
 5.==========================================
@@ -122,6 +296,35 @@ r = math.ceil(a / b * n)，其中ceil函数是向上取整，a / b的值是浮�
 
 需要注意的是，如果pre不存在，说明头节点也在反转的部分，此时返回新的头节点，也就是反转部分的最后一个节点；
 如果pre存在，说明头节点不在反转的部分，返回head即可。
+【代码实现】
+
+#python3.5
+def reversePart(head, start, end):
+    if head == None or head.next == None:
+        return head
+    length = 0
+    pre = None
+    pos = None
+    node1 = head
+    while node1 != None:
+        length += 1
+        pre = node1 if length == start-1 else pre
+        pos = node1 if length == end+1 else pos
+        node1 = node1.next
+    if start > end or start < 1 or end > length:
+        return head
+    node1 = pre.next if pre != None else head
+    node2 = node1.next
+    node1.next = pos
+    while node2 != pos:
+        next = node2.next
+        node2.next = node1
+        node1 = node2
+        node2 = next
+    if pre != None:
+        pre.next = node1
+        return head
+    return node1
 ==========================================
 
 6.==========================================
@@ -187,4 +390,957 @@ s = (m-1) % i + 1。两式合并后，结果为 Live(i) = (Live(i-1) + m - 1) % 
 2、根据n和m的值，以及上文推导的Live(i)与Live(i-1)的关系，递归求得幸存节点的编号。该递归是单决策递归且递归为n层，所以时间复杂度为O(n) 
 3、根据得到的幸存节点的编号，遍历链表找到该节点，O(n) 
 所以总体时间复杂度为O(n)。
+【代码实现】
+
+#python3.5
+def josephusKill1(head, m):
+    if head == None or head.next == None or m < 1:
+        return head
+    pre = head
+    while pre.next != head:
+        pre = pre.next
+    count = 1
+    while head != pre:
+        if count != m:
+            head = head.next
+            pre = pre.next
+            count += 1
+        else:
+            pre.next = head.next
+            head = pre.next
+            count = 1
+    return head
+
+
+def josephusKill2(head, m):
+    def getLive(n, m):
+        if n == 1:
+            return 1
+        return (getLive(n-1, m) + m - 1) % n + 1
+
+    if head == None or head.next == None or m < 1:
+        return head
+    n = 1
+    cur = head
+    while cur.next != head:
+        n += 1
+        cur = cur.next
+    n = getLive(n, m)
+    while n-1 != 0:
+        n -= 1
+        head = head.next
+    head.next = head
+    return head
+==========================================
+
+==========================================
+链表问题---判断一个链表是否为回文结构
+
+【题目】
+
+　　给定一个链表的头节点head，请判断该链表是否为回文结构。 
+　　进阶：如果链表长度为N，要求时间复杂度O(N)，空间复杂度O(1)。
+
+【基本思路】
+
+方法一。时间复杂度O(N)，空间复杂度O(N)。 
+使用栈，遍历一遍链表把每个节点都压入栈中，这样在弹出栈的时候，所有的节点就逆序了。依次对比原链表的每个节点即可。
+
+#python3.5
+def isPalindrome1(head):
+    if head == None or head.next == None:
+        return True
+    stack = []
+    cur = head
+    while cur != None:
+        stack.append(cur)
+        cur = cur.next
+    while stack:
+        if stack.pop().val != head.val:
+            return False
+        head = head.next
+    return True
+    　 
+方法二。时间复杂度O(N)，空间复杂度O(N/2)。 
+也使用栈，但是这次只将链表的后半部分压入栈中，这样在弹出栈的时候，后半部分的节点就逆序了。依次对比链表的前半部分和逆序后的后半部分的每个节点即可。
+
+def isPalindrome2(head):
+    if head == None or head.next == None:
+        return True
+    stack = []
+    pre = head
+    cur = head
+    while cur.next != None and cur.next.next != None:
+        pre = pre.next
+        cur = cur.next.next
+    while pre != None:
+        stack.append(pre)
+        pre = pre.next
+    while stack:
+        if stack.pop().val != head.val:
+            return False
+        head = head.next
+    return True
+
+方法三。时间复杂度O(N)，空间复杂度O(1)。 
+首先改变链表右半区的结构，使整个右半区的指针反指，中间节点的next指向None。接下来从两端开始向中间依次对比即可。需要注意的是，再判断完毕后要将链表调整会原链表的结构。
+
+def isPalindrome3(head):
+    if head == None or head.next == None:
+        return True
+    pre = head
+    cur = head
+    while cur.next != None and cur.next.next != None:
+        pre = pre.next 
+        cur = cur.next.next
+    node = pre.next
+    pre.next = None 
+    while node != None:
+        next = node.next
+        node.next = pre
+        pre = node
+        node = next
+    node = pre
+    res = True
+    while pre != None and head != None:
+        if pre.val != head.val:
+            res = False
+            break
+        pre = pre.next
+        head = head.next
+    pre = node.next
+    node.next = None
+    while pre != None:
+        next = pre.next
+        pre.next = node
+        node = pre
+        pre = next
+    return res
+==========================================
+
+==========================================
+链表问题---将单向链表按某值划分成左边小，中间相等，右边大的形式
+2017年11月13日 11:09:04 阅读数：153
+【题目】
+
+给定一个单向链表的头节点head，节点的值类型是整型，再给定一个整数pivot。实现一个调整链表的函数，将链表调整为左部分都是值小于pivot的节点，中间部分都是值等于pivot的节点，右部分都是值大于pivot的节点。除这个要求外，对调整后的节点顺序没有更多的要求。
+
+【进阶题目】
+
+在原问题的要求之上再增加如下两个要求：
+
+在左、中、右三个部分的内部也做顺序要求，要求每部分里的节点从左到右的顺序与原链表中节点的先后次序一致。
+如果链表长度为N，要求时间复杂度O(N)，空间复杂度O(1)。
+【基本思路】
+
+原问题。将所有的节点放置到一个数组中，对这个数组进行partition调整（快排调整过程），再将每个数组中每个节点串起来即可。
+
+#python3.5
+def listPartition(head, pivot):
+    def partition(nodeArr, pivot):
+        left = -1
+        right = len(nodeArr)
+        index = 0
+        while index < right:
+            if nodeArr[index].val < pivot:
+                left += 1
+                nodeArr[left], nodeArr[index] = nodeArr[index], nodeArr[left]
+                index += 1
+            elif nodeArr[index].val == pivot:
+                index += 1
+            else:
+                right -= 1
+                nodeArr[index], nodeArr[right] = nodeArr[right], nodeArr[index]
+
+
+    if head == None or head.next == None:
+        return head
+    cur = head
+    n = 0
+    while cur != None:
+        n += 1
+        cur = cur.next
+    nodeArr = []
+    cur = head
+    while cur != None:
+        nodeArr.append(cur)
+        cur = cur.next
+    partition(nodeArr, pivot)
+    for i in range(n-1):
+        nodeArr[i].next = nodeArr[i+1]
+    nodeArr[-1].next = None
+    return nodeArr[0]
+
+进阶题目。按照原链表各个节点的对应顺序将链表分解成三部分，小于pivot的、等于pivot的，大于pivot的，之后再将三个连起来即可。
+
+def listPartition2(head, pivot):
+    if head == None or head.next == None:
+        return head
+    sH = None    #small部分的头
+    sT = None    #small部分的尾
+    eH = None    #equal部分的头
+    eT = None    #equal部分的尾
+    bH = None    #big部分的头
+    bT = None    #big部分的尾
+    while head != None:
+        next = head.next
+        head.next = None
+        if head.val < pivot:
+            if sH == None:
+                sH = head
+                sT = head
+            else:
+                sT.next = head
+                sT = head
+        elif head.val == pivot:
+            if eH == None:
+                eH = head
+                eT = head
+            else:
+                eT.next = head
+                eT = head
+        else:
+            if bH == None:
+                bH = head
+                bT = head
+            else:
+                bT.next = head
+                bT = head
+        head = next
+    head = None
+    if sT != None:
+        head = sH
+        if eH != None:
+            sT.next = eH
+        elif bH != None:
+            sT.next = bH
+    if eT != None:
+        head = head if head != None else eH
+        if bH != None:
+            eT.next = bH
+    return head
+==========================================
+
+==========================================
+链表问题---复制含有随机指针节点的链表
+2017年11月13日 16:28:11 阅读数：94
+【题目】
+
+一种特殊的链表节点类型描述如下：
+
+class Node:
+    def __init__(self, data):
+        self.val = data
+        self.next = None
+        self.rand = None
+
+　　Node类中的value是节点值，next指针和正常单链表中next指针的意义一样，都指向下一个节点，rand指针是Node类中新增的指针，这个指针可能指向链表中的任意一个节点，也可能指向None。 
+　　给定一个由Node节点类型组成的无环单链表的头节点head，请实现一个函数完成这个链表中所有结构的复制，并返回复制的新链表的头节点。
+
+　　进阶：不使用额外的数据结构，只用有限几个变量，且在时间复杂度为O(N)内完成原问题要实现的函数。
+
+【基本思路】
+
+原问题。使用一个哈希表，建立旧节点和新节点的对应关系。然后遍历一遍链表，根据原链表和哈希表设置每一个新节点的next和rand指针。
+
+#python3.5
+class RandNode:
+    def __init__(self, data):
+        self.val = data
+        self.next = None
+        self.rand = None
+
+def copyListWithRand1(head):
+    if head == None:
+        return None
+    map = {}
+    cur = head
+    while cur != None:
+        map[cur] = RandNode(cur.val)
+        cur = cur.next
+    cur = head
+    while cur != None:
+        map[cur].next = None if cur.next == None else map[cur.next]
+        map[cur].rand = None if cur.rand == None else map[cur.rand]
+        cur = cur.next
+    return map[head] 
+
+进阶问题。在原链表中每一个节点的后面插入一个副本节点。遍历一遍链表，在遍历时设置每一个副本节点的rand指针。最后再分离成两个链表即可。
+
+def copyListWithRand2(head):
+    if head == None:
+        return None
+    cur = head
+    while cur != None:
+        next = cur.next
+        cur.next = RandNode(cur.val)
+        cur.next.next = next
+        cur = next
+    cur = head
+    while cur != None:
+        cur.next.rand = None if cur.rand == None else cur.rand.next
+        cur = cur.next.next
+    copyHead = head.next
+    cur = head
+    while cur != None:
+        next = cur.next
+        cur.next = next.next
+        next.next = None if next.next == None else next.next.next
+        cur = cur.next
+    return copyHead
+==========================================
+
+==========================================
+链表问题---两个单链表生成相加链表
+2017年11月13日 18:33:37	阅读数：122
+【题目】
+
+假设链表中每一个节点的值都在0~9之间，那么链表整体就可以代表一个整数。 
+例如：9 -> 3 -> 7，可以代表整数937。 
+给定两个这种链表的头节点head1和head2，请生成代表两个整数相加值的结果链表。 
+例如：链表1为9 -> 3 -> 7，链表2为6 -> 3，最后生成新的结果链表为1 -> 0 -> 0 -> 0。
+
+【基本思路】
+
+容易想到的方法是先将两个链表的值表示出来，然后将两个值累加起来，再根据累加结果生成一个新链表。这种方法实际是不可行的，因为链表的长度可以很长，表示的数字可以很大，容易出现int类型溢出。
+
+方法一。利用两个栈，分别将链表1、2的值压入栈中，这样就生成了两个链表的逆序栈。将两个栈同时弹出，这样就相当于两个链表从低位到高位依次弹出，在这个过程中生成相加链表即可。注意相加过程中的进位问题。
+
+#python3.5
+def addList1(head1, head2):
+    if head1 == None or head2 == None:
+        raise Exception("Input Error!")
+    s1 = []
+    s2 = []
+    while head1 != None:
+        s1.append(head1.val)
+        head1 = head1.next
+    while head2 != None:
+        s2.append(head2.val)
+        head2 = head2.next
+    print("post")
+    carry = 0
+    pre = None
+    while s1 or s2:
+        num1 = 0 if not s1 else s1.pop()
+        num2 = 0 if not s2 else s2.pop()
+        sum = num1 + num2 + carry
+        node = Node(sum % 10)
+        node.next = pre
+        pre = node
+        carry = sum // 10
+    if carry == 1:
+        node = Node(1)
+        node.next = pre
+        pre = node
+    return pre
+
+方法二。将链表逆序求解，可以省掉用栈的空间。
+
+def addList2(head1, head2):
+    if head1 == None or head2 == None:
+        raise Exception("Input Error!")
+    head1 = reverseList(head1)
+    head2 = reverseList(head2)
+    pre1 = head1
+    pre2 = head2
+    pre = None
+    carry = 0
+    while pre1 != None or pre2 != None:
+        sum = pre1.val + pre2.val + carry
+        node = Node(sum % 10)
+        node.next = pre
+        pre = node
+        carry = sum // 10
+        pre1 = pre1.next
+        pre2 = pre2.next
+    if carry == 1:
+        node = Node(1)
+        node.next = pre
+        pre = node
+    reverseList(head1)
+    reverseList(head2)
+    return pre
+==========================================
+
+==========================================
+链表问题---两个单链表相交的一系列问题
+2017年11月17日 10:53:42 阅读数：421
+【题目】
+
+在本题中，单链表可能有环，也可能没环。给定两个单链表的头节点head1和head2，这两个单链表可能相交，也可能不相交。请实现一个函数，如果两个链表相交，请返回相交的第一个节点；如果不相交，返回null即可。 
+要求，时间复杂度O(N+M)，空间复杂度O(1)。
+
+【基本思路】
+
+该问题可以分解成三个子问题： 
+　　 
+问题一：如何判断一个链表是否有环，如果有的话返回第一个进环的节点，否则返回None。 
+问题二：如何判断两个无环链表是否相交，相交则返回第一个相交节点，否则返回None。 
+问题三：如何判断两个有环链表是否相交，相交则返回第一个相交节点，否则返回None。 
+另外，如果一个链表有环，一个链表无环，那么这两个链表是不可能相交的，直接返回None。
+
+下面逐个解决三个子问题：
+
+问题一：
+
+使用两个指针slow和fast，slow一次走一步，fast一次走两步。如果无环，fast一定会走到None节点；否则，slow和fast一定会相遇，此时让fast回到头节点，接下来fast改为每次走一步，slow也是一次走一步，两个节点再次相遇的时候就是第一个入环节点。 
+证明如下： 
+这里写图片描述 
+具体实现参见如下代码：
+
+#python3.5
+def getLoopNode(head):
+    if head == None or head.next == None or head.next.next == None:
+        return None
+    slow = head.next
+    fast = head.next.next
+    while slow != fast:
+        if fast.next == None or fast.next.next == None:
+            return None
+        slow = slow.next
+        fast = fast.next.next
+    fast = head
+    while slow != fast:
+        slow = slow.next
+        fast = fast.next
+    return slow
+
+问题二： 
+　　 
+如果两个无环链表相交，那么从相交开始到结尾的这一段，是两个链表共享的。假设链表长度较长的链表为head1，长度为len1，链表长度较短的链表为head2，长度为len2。先让head1走len1 - len2步，然后开始同步走，第一次相遇的位置就是第一个相交节点。如果一直走到None也不相遇，则两链表不相交。具体实现如下：
+
+def noLoop(head1, head2):
+    if head1 == None or head2 == None:
+        return None
+    cur1 = head1
+    cur2 = head2
+    n = 0
+    while cur1.next != None:
+        n += 1
+        cur1 = cur1.next
+    while cur2.next != None :
+        n -= 1
+        cur2 = cur2.next
+    if cur1 != cur2:
+        return None 
+    cur1 = head1 if n >= 0 else head2
+    cur2 = head1 if cur1 == head2 else head2
+    n = abs(n)
+    while n != 0:
+        cur1 = cur1.next 
+        n -= 1
+    while cur1 != cur2:
+        cur1 = cur1.next
+        cur2 = cur2.next
+    return cur1
+
+问题三：
+
+考虑问题三的时候，我们已经得到了两个链表各自的第一入环节点node1和node2。 
+　　 
+如果两个有环链表相交，并且在入环之前就相交的话，即node1 == node2，该情况的求解和问题二类似，只不过终止的条件不再是遍历到None而是node1。
+
+如果node1 != node2，那么从node1开始遍历，如果node2和node1在同一个环中，node1遍历一圈一定会与node2相遇，此时返回node1和node2都可以；如果没有相遇，则两个链表不相交，返回None。
+
+具体实现如下：
+
+def bothLoop(head1, node1, head2, node2):
+    if head1 == None or head2 == None:
+        return None
+    if node1 == node2:
+        cur1 = head1
+        cur2 = head2
+        n = 0
+        while cur1 != node1:
+            n += 1
+            cur1 = cur1.next
+        while cur2 != node1:
+            n -= 1
+            cur2 = cur2.next
+        cur1 = head1 if n >= 0 else head2
+        cur2 = head1 if cur1 == head2 else head2
+        n = abs(n)
+        while n != 0:
+            n -= 1
+            cur1 = cur1.next
+        while cur1 != cur2:
+            cur1 = cur1.next
+            cur2 = cur2.next
+        return cur1
+    else:
+        cur1 = node1.next
+        while cur1 != node1:
+            if cur1 == node2:
+                return node1
+            cur1 = cur1.next
+        return None
+
+主函数实现如下：
+
+class Node:
+    def __init__(self, val=None):
+        self.val = val
+        self.next = None
+
+def getIntersectNode(head1, head2):
+    if head1 == None or head2 == None:
+        return None
+    node1 = getLoopNode(head1)
+    node2 = getLoopNode(head2)
+    if node1 == None and node2 == None:
+        return noLoop(head1, head2)
+    if node1 != None and node2 != None:
+        return bothNode(head1, node1, head2, node2)
+    return None
+==========================================
+
+==========================================
+链表问题---将单链表的每Ｋ个节点之间逆序
+2017年11月19日 10:19:49阅读数：143
+【题目】
+
+给定一个单链表的头节点head，实现一个调整单链表的函数，使得每K个节点之间逆序，如果最后不够K个节点，则不调整最后的节点。
+
+【基本思路】
+
+方法一。时间复杂度O(N)，空间复杂度O(K)。 
+　　 
+利用栈结构，依次遍历链表，将节点压入栈中，栈中节点每凑到k个就将这k个节点进行逆序，然后再连接入链表中。需要注意头节点的更新以及每组节点两头的连接。代码实现如下：
+
+#python3.5
+def reverseKNode(head, k):
+    def reverse(stack, pre, next):
+        while stack:
+            cur = stack.pop()
+            if pre != None:
+                pre.next = cur
+            pre = cur
+        pre.next = next
+        return pre
+
+
+    if head == None or head.next == None or k < 2:
+        return head
+    stack = []
+    cur = head
+    newHead = head
+    pre = None
+    while cur != None:
+        next = cur.next
+        stack.append(cur)
+        if len(stack) == k:
+            pre = reverse(stack, pre, next)
+            newHead = cur if newHead == head else newHead
+        cur = next
+    return newHead
+
+方法二。时间复杂度O(N)，空间复杂度O(1)。
+
+不需要利用栈，用变量记录每一组开始的第一个节点和最后一个节点，然后直接逆序调整，把这一组的节点都逆序。需要注意头节点的更新以及每组节点两头的连接。代码实现如下：
+
+def reverseKNode2(head, k):
+    def reverse2(head, left, right):
+        pre = None
+        start = head
+        while head != right:
+            next = head.next
+            head.next = pre
+            pre = head
+            head = next
+        if left != None:
+            left.next = pre
+        start.next = right
+
+    if head == None or head.next == None or k < 2:
+        return head
+    pre = None
+    cur = head
+    count = 0
+    while cur != None:
+        count += 1
+        next = cur.next
+        if count == k:
+            start = head if pre == None else pre.next
+            head = cur if pre == None else head
+            reverse2(start, pre, next)
+            pre = start
+            count = 0
+        cur = next
+    return head
+==========================================
+
+==========================================
+链表问题---删除无序单链表中值重复出现的节点
+2017年11月19日 10:28:47阅读数：166
+【题目】
+
+给定一个无序单链表的头节点head，删除其中值重复出现的节点。
+
+请按以下要求实现两种方法。
+
+方法一。时间复杂度O(N)。
+方法二。空间复杂度O(1)。
+【基本思路】
+
+方法一。利用哈希表，依次遍历每一个节点，如果这个节点的值已经存在于哈希表中，将该节点删除；否则，将该节点的值添加到哈希表中。代码实现如下：
+
+#python3.5
+def removeRepeatNode(head):
+    if head == None or head.next == None:
+        return head
+    hashSet = set()
+    pre = head
+    cur = head.next
+    hashSet.add(head.val)
+    while cur != None:
+        next = cur.next
+        if cur.val not in hashSet:
+            hashSet.add(cur.val)
+            pre = cur
+        else:
+            pre.next = next
+        cur = next
+
+方法二。时间复杂度O(N2)，空间复杂度O(1)。
+
+遍历每一个节点，假设遍历到位置i，从i位置开始遍历之后所有的节点，把值相同的节点的删除。代码实现如下：
+
+def removeRepeatNode2(head):
+    if head == None or head.next == None:
+        return head
+    while head != None:
+        pre = head
+        cur = head.next
+        while cur != None:
+            if cur.val == head.val:
+                pre.next = cur.next
+            else:
+                pre = cur
+            cur = cur.next
+        head = head.next
+==========================================
+
+==========================================
+链表问题---在单链表中删除指定值的节点
+2017年11月19日 10:35:46阅读数：196
+【题目】
+
+给定一个链表的头节点head和一个整数num，请实现函数将值为num的节点全部删除。
+
+【基本思路】
+
+方法一。时间复杂度O(N)，空间复杂度O(N)。
+
+利用栈或者其他存储结构。将不等于num的节点收集起来，收集完成后再重新连接即可。代码实现如下：
+
+#python3.5
+def removeValue1(head, num):
+    if head == None:
+        return None
+    stack = []
+    while head != None:
+        if head.val != num:
+            stack.append(head)
+        head = head.next
+    while stack:
+        stack[-1].next = head
+        head = stack.pop()
+    return head
+
+方法二。时间复杂度O(N)，空间复杂度(1)。
+
+首先从链表头开始，找到第一个值不等于num的节点，作为新的头节点。之后继续往后遍历，将所有值为num的节点删除即可。代码实现如下：
+
+def removeValue2(head, num):
+    if head == None:
+        return head
+    while head != None and head.val == num:
+        head = head.next
+    pre = head
+    cur = head
+    while cur != None:
+        if cur.val == num:
+            pre.next = cur.next
+        else:
+            pre = cur
+        cur = cur.next
+==========================================
+
+==========================================
+链表问题---将搜索二叉树转换成双向链表
+2017年11月21日 13:11:14阅读数：76
+【题目】
+
+对二叉树的节点来说，有本身的值域，有指向左孩子和右孩子的两个指针；对双向链表的节点来说，有本身的值域，有指向上一个节点和下一个节点的指针。在结构上，两种结构有相似性，现在有一棵搜索二叉树，请将其转换为一个有序的双向链表。最后返回转换后的双向链表的头节点。
+
+【基本思路】
+
+方法一。时间复杂度O(N)，空间复杂度O(N)。
+
+使用队列等容器收集二叉树中序遍历的结果，收集完毕后在按照队列中的顺序将每个节点串起来。代码实现如下：
+
+#python3.5
+def convert1(head):
+    def inOrderToQueue(head, queue):
+        if head == None:
+            return 
+        inOrderToQueue(head.left, queue)
+        queue.append(head)
+        inOrderToQueue(head.right, queue)
+
+    if head == None:
+        return None
+    queue = []
+    inOrderToQueue(head, queue)
+    head = queue.pop(0)
+    head.left = None
+    newHead = head
+    while queue:
+        node = queue.pop(0)
+        head.right = node
+        node.left = head
+        head = node
+    head.right = None
+    return newHead
+
+方法二。时间复杂度O(N)，空间复杂度O(h)。
+
+利用递归函数。一个头节点为head的二叉树转换成有序双向链表，首先将head的左子树和右子树转换成有序双向链表L1和L2，然后让head节点连接L1链表的尾节点和L2链表的头节点。改写后序递归即可。
+
+问题的关键是如何快速定位一个双向链表的头节点和尾节点，解决的方法是，使双向链表尾节点的right指针指向头节点，递归的时候返回链表的尾节点，这样不仅可以得到链表的尾节点，也可以根据right指针很快的得到头节点。当然，递归结束后要将链表的结构还原。代码实现如下：
+
+def convert2(head):
+    def process(head):
+        if head == None:
+            return 
+        leftE = process(head.left)
+        rightE = process(head.right)
+        leftH = None if leftE == None else leftE.right
+        rightH = None if rightE == None else rightE.right
+        if leftE != None and rightE != None:
+            leftE.right = head
+            head.left = leftE
+            rightH.left = head
+            head.right = rightH
+            rightE.right = leftH
+            return rightE
+        elif leftE != None:
+            leftE.right = head
+            head.left = leftE
+            head.right = leftH
+            return head
+        elif rightE != None:
+            head.right = rightH
+            rightH.left = head
+            rightE.right = head
+            return rightE
+        else:
+            head.right = head
+            return head
+
+    if head == None:
+        return None
+    tail = process(head)
+    head = tail.right
+    tail.right = None
+    return head
+==========================================
+
+==========================================
+链表问题---单链表的选择排序
+2017年11月21日 13:19:41阅读数：75
+【题目】
+
+给定一个无序链表的头节点head，实现单链表的选择排序。 
+要求：空间复杂度O(1)。
+
+【基本思路】
+
+选择排序的过程是从未排序的部分中找到最小值，然后放在已经排好序部分的尾部，逐渐将未排序的部分缩小，最后全部变成排好序的部分。时间复杂度O(N2)。
+
+【代码实现】
+
+#python3.5
+def selectionSort(head):
+    def getSmallestPre(head):
+        if head == None:
+            return None
+        pre = head    #important
+        smallest = head
+        smallPre = None
+        head = head.next
+        while head != None:
+            if head.val < smallest.val:
+                smallest = head
+                smallPre = pre
+            pre = head
+            head = head.next
+        return smallPre
+
+
+    if head == None or head.next == None:
+        return head
+    tail = None     #排序后链表的尾节点
+    newHead = None
+    cur = head
+    small = None
+    while cur != None:
+        smallPre = getSmallestPre(cur)    #最小节点的前一个节点，方便删除节点
+        if smallPre != None:
+            small = smallPre.next
+            smallPre.next = small.next
+        else:
+            small = cur
+            cur = cur.next
+        if tail == None:
+            tail = small
+            newHead = tail
+        else:
+            tail.next = small
+            tail = small
+    return newHead
+==========================================
+
+==========================================
+链表问题---一种怪异的节点删除方式
+2017年11月21日 13:45:56
+阅读数：102
+【题目】
+
+链表的节点类型是int型，给定一个链表中的节点node，但不给定整个链表的头节点。如何在链表中删除node？请实现这个函数，并分析这么做会出现哪些问题。
+
+要求：时间复杂度O(1)。
+
+【基本思路】
+
+实现方法很简单，令node节点的值等于下一个节点的值，之后删除node的下一个节点即可。这样做有很大的问题：
+
+问题一：无法删除最后一个节点，因为最后一个节点没有next节点，也不能直接将最后一个节点设置成null，因为null在系统中是一个特定的区域，也就是说即使将node设置成null，node的上一个节点的next指针指向的内存区域还是node没有设置成null时候的那个内存区域。
+
+问题二：这种删除方式本质上根本删不了node节点，只是改变了node节点的值。这在实际工程中可能会带来很大问题。比如，工程上的一个节点可能代表很复杂的结构，节点值的复制会相当复杂，或者可能改变节点值这个操作都是被禁止的。再如：工程上的一个节点代表提供服务的一个服务器，外界对每个节点都有很多依赖，不能随便删除其他的节点。
+
+【代码实现】
+
+#python3.5
+def removeNode(node):
+    if node == None:
+        return None
+    next = node.next
+    if next == None:
+        raise Exception("Can not remove last node.")
+    node.val = next.val
+    node.next = next.next
+==========================================
+
+==========================================
+链表问题---向有环的环形链表中插入新节点
+2017年11月21日 13:58:46
+阅读数：119
+【题目】
+
+一个环形单链表从头节点开始不降序，同时由最后的节点指向头节点。给定这样一个环形单链表的头节点head和一个整数num，请生成节点值为num的新节点，并插入到这个环形链表中，保证调整后的链表依然有序。
+
+【基本思路】
+
+令变量pre= head，cur = head.next，然后令pre和cur同步移动下去，如果遇到pre的值小于等于num并且cur的值大于等于num，则将num产生的节点插到pre和cur的中间即可。
+
+如果转了一圈都不符合上述的条件，说明num要么比链表中最小的值还小，要么比最大值还大，这时只要将num产生的节点插到头节点的前面即可，这时要注意头节点的更新。
+
+【代码实现】
+
+#python3.5
+def insertNum(head, num):
+    node = Node(num)
+    if head == None:
+        node.next = node
+        return node
+    pre = head
+    cur = head.next
+    while cur != head:
+        if pre.val <= num and cur.val >= num:
+            break
+        pre = pre.next
+        cur = cur.next
+    pre.next = node
+    node.next = cur
+    return head if head.val < num else node
+==========================================
+
+==========================================
+链表问题---合并两个有序的单链表
+2017年11月21日 14:07:05
+阅读数：71
+【题目】
+
+给定两个有序单链表的头节点head1和head2，请合并两个有序链表，合并后的链表依然有序，并返回合并后链表的头节点。
+
+【代码实现】
+
+#python3.5
+def merge(head1, head2):
+    if head1 == None or head2 == None:
+        return head1 if head2 == None else head2
+    head = head1 if head1.val < head2.val else head2
+    cur1 = head1 if head == head1 else head2
+    cur2 = head1 if head == head2 else head2
+    pre = None
+    while cur1 != None and cur2 != None:
+        if cur1.val <= cur2.val:
+            pre = cur1
+            cur1 = cur1.next
+        else:
+            next = cur2.next
+            pre.next = cur2
+            cur2.next = cur1
+            pre = cur2
+            cur2 = next
+    pre.next = cur1 if cur2 == None else cur2
+    return head
+==========================================
+
+==========================================
+链表问题---按照左右半区的方式重新组合单链表
+2017年11月21日 16:56:37
+阅读数：85
+【题目】
+
+给定一个单链表的头节点head，链表长度为N，如果N为偶数，那么前N/2个节点算作左半区，后N/2个节点算作右半区；如果N为奇数，那么前N/2个节点算作左半区，后N/2+1个节点算作右半区。左半区从左到右依次是L1 -> L2 ->…，右半区从左到右依次是R1 -> R2 ->…，请将单链表调整成L1 -> R1 -> L2 -> R2 ->…的形式。
+
+【基本思路】
+
+先遍历一遍找到左半区的最后一个节点，然后将链表分成左右两部分，在按照题目要求重新合并即可。
+
+如何找到左半区的最后一个节点？ 
+　　 
+例如：1 -> 2，mid为１； 
+1 -> 2 -> 3，mid为2； 
+1 -> 2 -> 3 -> 4，mid为2； 
+1 -> 2 -> 3 -> 4 -> 5，mid为3； 
+1 -> 2 -> 3 -> 4 -> 5 -> 6，mid为3；
+
+也就是说，从长度为2开始，长度每增加2，mid就往后移动一个节点。
+
+【代码实现】
+
+#python3.5
+def reCombination(head):
+    if head == None or head.next == None:
+        return head
+    mid = head
+    right = head.next
+    while right.next != None and right.next.next != None:
+        mid = mid.next
+        right = right.next.next
+    right = mid.next
+    mid.next = None
+    cur = head
+    while cur.next != None:
+        rightNext = right.next
+        right.next = cur.next
+        cur.next = right
+        cur = right.next
+        right = rightNext
+    cur.next = right
+    return head
 ==========================================

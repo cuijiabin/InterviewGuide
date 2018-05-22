@@ -25,3 +25,1466 @@
 求最短通路值
 数组中未出现的最小正整数
 数组排序之后相邻数的最大差值
+
+数组与矩阵---转圈打印矩阵
+2017年09月08日 10:49:26
+阅读数：179
+【题目】
+
+　　给定一个整型矩阵 matrix，请按照转圈的方式打印它。 
+　　例如： 
+　　 1　　2　　3　　4 
+　　 5　　6　　7　　8 
+　　 9 　 10 　 11 　12 
+　　 13 　14　 15 　16 
+　　打印结果为：1,2,3,4,8,12,16,15,14,13,9,5,6,7,11,10 
+　　 
+　　要求额外空间复杂度为O(1).
+
+【基本思路】
+
+　　一层一层的打印矩阵。在矩阵中用左上角(tR, tC)和右下角(dR, dC)就可以表示一个子矩阵。比如，题目中的矩阵，当(tR, tC) = (0,0), (dR, dC) = (3,3)。表示的子矩阵就是整个矩阵，它的最外圈的部分如下： 
+　　１ 　２　 ３ 　４ 
+　　５ 　　 　 　　８ 
+　　９ 　 　　 　　12 
+　　13　14 　15　16 
+转圈把这个外层打印出来，然后令tR, tC加１，dR, dC减１，这时所表示的子矩阵就是： 
+　　6　 ７ 
+　　10　11 
+继续转圈打印出来即可。
+
+【代码实现】
+
+#python3.5
+def spiralOrderPrint(matrix):
+    tR = tC = 0
+    dR = len(matrix) - 1
+    dC = len(matrix[0]) - 1
+    while tR <= dR and tC <= dC:
+        if tR == dR:
+            for i in range(tC, dC+1):
+                print(matrix[tR][i], end=' ')
+        elif tC == dC:
+            for i in range(tR, dR+1):
+                print(matcix[i][tC], end=' ')
+        else:
+            for i in range(tC, dC):
+                print(matrix[tR][i], end=' ')
+            for i in range(tR, dR):
+                print(matrix[i][dC], end=' ')
+            for i in range(dC, tC, -1):
+                print(matrix[dR][i], end=' ')
+            for i in range(dR, tR, -1):
+                print(matrix[i][tC], end=' ')
+        tR += 1
+        tC += 1
+        dR -= 1
+        dC -= 1
+
+数组与矩阵---将正方形矩阵顺时针转动90度
+2017年09月08日 11:03:51
+阅读数：138
+【题目】
+
+　　给定一个N × N的矩阵 matrix，把这个矩阵调整成顺时针转动90°后的形式。 
+　　例如： 
+　　 1　　2　　3　　4 
+　　 5　　6　　7　　8 
+　　 9 　 10 　 11 　12 
+　　 13 　14　 15 　16 
+　　 
+　　顺时针转动90°的结果为： 
+　　13 　　9　　 5 　　1 
+　　14　　10　　6　 　2 
+　　15　　11　　7　　 3 
+　　16　　12　　8　　 4
+
+　　要求额外空间复杂度O(1)。 
+【基本思路】
+
+　　分圈处理。在矩阵中用左上角(tR, tC)和右下角(dR, dC)就可以表示一个子矩阵。比如，题目中的矩阵，当(tR, tC) = (0,0), (dR, dC) = (3,3)。表示的子矩阵就是整个矩阵，它的最外圈的部分如下： 
+　　１ 　２　 ３ 　４ 
+　　５ 　　 　 　　８ 
+　　９ 　 　　 　　12 
+　　13　14 　15　16 
+　　在这个外圈中，1,4,16,13为一组，然后让1占据4的位置，4占据16的位置，16占据13的位置，13占据1的位置，这样一组就调整完了。然后2,8,15,9为一组，继续调整。最后3,12,14,5为一组，继续调整。都调整完之后，这一圈就旋转完毕。令tR, tC加1，dR,dC减1，开始处理下一个子矩阵的外圈。原理同上。
+
+下面是使用python3.5实现的代码。
+
+def rotateMatrix(m):
+    tR = tC = 0
+    dR = len(m) - 1
+    dC = len(m[0]) - 1
+    while tR <= dR:
+        for i in range(tR, dR):
+            m[tR][tC+i], m[tR+i][dC], m[dR][dC-i], m[dR-i][tC] \
+                = m[dR-i][tC], m[tR][tC+i], m[tR+i][dC], m[dR][dC-i]
+        tR = tC = tR + 1
+        dR = dC = dR - 1
+
+数组与矩阵---之字型打印矩阵
+2017年09月08日 11:15:30
+阅读数：250
+【题目】
+
+　　给定一个矩阵 matrix，按照“之”字形的方式打印这个矩阵，例如： 
+　　1　　2　　3　　4 
+　　4　　5　　6　　8 
+　　9　　10 　11 　12 
+　　“之”字形打印的结果为：1, 2, 5, 9, 6, 3, 4, 7, 10, 11, 8, 12
+
+　　要求额外空间复杂度为O(1)
+
+【基本思路】
+
+上坐标(tR1,tC1)初始化为(0,0)，先沿着矩阵第一行移动(tC1++)，当到达第一行最右边的元素后，再沿着矩阵最后一列移动(tR1++).
+下坐标(tR2,tC2)初始化为(0,0)，先沿着矩阵第一列移动(tR2++)，当到达第一列最下边的元素后，再沿着矩阵最后一行移动(tC2++).
+上坐标和下坐标同时移动，每次移动后，上坐标和下坐标的连线就是矩阵的一条斜线，打印斜线上的元素即可.
+用一个boolean型变量flag控制打印的方向.
+下面是使用python3.5实现的代码。
+
+def printMatrixZigZag(m):
+    def printLevel(m, tR1, tC1, tR2, tC2, flag):
+        if flag:
+            while tR2 != tR1 - 1:
+                print(m[tR2][tC2], end=' ')
+                tR2 -= 1
+                tC2 += 1
+        else:
+            while tR1 != tR2 + 1:
+                print(m[tR1][tC1], end=' ')
+                tR1 += 1
+                tC1 -= 1
+
+
+    tR1 = tC1 = tR2 = tC2 = 0
+    dR = len(m) - 1
+    dC = len(m[0]) - 1
+    flag = True
+    while tR1 <= dR and tC2 <= dC:
+        printLevel(m, tR1, tC1, tR2, tC2, flag)
+        tR1 = tR1 if tC1 != dC else tR1 + 1
+        tC1 = tC1 + 1 if tC1 != dC else tC1
+        tC2 = tC2 if tR2 != dR else tC2 + 1
+        tR2 = tR2 + 1 if tR2 != dR else tR2
+        flag = not flag
+
+数组与矩阵---找到无序数组中最小的k个数
+2017年09月09日 17:57:23
+阅读数：115
+【题目】
+
+　　给定一个无序的整型数组arr，找到其中最小的k个数。
+
+【要求】
+
+　　如果数组arr的长度为N，排序之后自然可以得到最小的k个数，此时时间复杂度与排序算法的时间复杂度相同，为O(NlogN)。本题要求读者实现时间复杂度为O(Nlogk)和O(N)的方法。
+
+【基本思路】
+
+　　O(Nlogk)的方法。思路很简单，就是一直维护一个大小为k的大根堆，这个堆表示目前选出的k个最小的数。接下来遍历整个数组，遍历过程中看当前数是否比堆顶元素小，如果是的话，将堆顶元素替换成当前的数，然后从堆顶向下调整堆；否则，不进行任何操作。遍历结束后，堆中的k个数就是答案。
+
+下面是使用python3.5实现的代码：
+
+def getMinKNumsByHeap(arr, k):
+    def heapInsert(heap, value, i):
+        heap[i] = value
+        parent = (i-1) // 2
+        while parent >= 0:
+            if arr[parent] < value:
+                arr[i] = arr[parent]
+                i = parent
+                parent = (parent-1) // 2
+            else:
+                break
+        arr[i] = value
+
+    def heapify(heap, index):
+        n = len(heap)
+        child = 2 * index + 1
+        tmp = heap[index]
+        while child < n:
+            if child < n-1 and heap[child] < heap[child+1]:
+                child += 1
+            if heap[child] > tmp:
+                heap[index] = heap[child]
+                index = child
+                child = 2 * child + 1
+            else:
+                break
+        heap[index] = tmp
+
+
+    if arr == None or len(arr) == 0 or k < 1 or k > len(arr):
+        return arr
+    heap = [0 for i in range(k)]
+    for i in range(k):
+        heapInsert(heap, arr[i], i)
+    for i in range(k, len(arr)):
+        if arr[i] < heap[0]:
+            heap[0] = arr[i]
+            heapify(heap, 0)
+    return heap
+
+　　O(N)的方法。需要用到一个经典的算法——BFPRT 算法。该算法解决的问题是，在时间复杂度O(N)内，从无序数组中找到第k个最小的数。显然，如果我们找到第k个最小的数，只需要再遍历一次数组即可找到最小的k个数。 
+　　假设BFPRT算法的函数是selct(arr, k)，表示在arr中找到第k个最小的数并返回。具体算法过程如下：
+
+将arr中的n个元素5个5个分成一组，不够5个的单独分成一组
+
+对每个组进行组内排序（插入排序）。排序后找到每个组的中位数，如果组的元素个数是偶数，这里规定找下中位数
+
+步骤2中一定会找到n/5个中位数，让这些中位数组成一个新的数组，假设为res。递归调用select(res, len(res)/2)，意义是找到这个新数组的中位数，即res中第res/2小的数 
+　
+假设步骤3中递归调用select后，返回的数是x。根据这个x划分整个arr数组(partition过程）：比x小的都放在x的左边，比x大的都放在x的右边。假设划分完后，x在arr中的位置记为 i 
+　
+如果i == k-1，说明x为整个数组中第k个小的数，直接返回；如果i > k-1，说明第k个最小的数在x左边，调用select函数在左半区寻找；如果i < k-1，说明第k个最小的数在x右边，调用select函数在右半区寻找
+在整个实现的过程中，对BFPRT做了一点改进，改进的地方是当中位数的中位数x出现多次时，我们返回的是一个下标范围而不是一个值。这样可以减少递归调用的次数。
+
+下面是使用python3.5实现的代码：
+
+def getMinKNumsByBFPRT(arr, k):
+    if arr == None or len(arr) == 0 or k < 1 or k > len(arr):
+        return arr
+    minKth = getMinKthByBFPRT(arr, k)
+    res = []
+    for i in range(len(arr)):
+        if arr[i] < minKth:
+            res.append(arr[i])
+    for i in range(len(res), k):
+        res.append(minKth)
+    return res
+
+
+    def getMinKthByBFPRT(arr, k):
+        copyArr = [arr[i] for i in range(len(arr))]
+        return select(copyArr, 0, len(copyArr)-1, k-1)
+
+    def select(arr, begin, end, index):
+        if begin == end:
+            return arr[begin]
+        pivot = medianOfMedian(arr, begin, end)
+        pivotRange = partition(arr, begin, end, pivot)    #返回一个大小为2的数组，表示pivot这个数 \
+        在数组中的范围，因为pivot可能出现了不止一次
+        if index >= pivotRange[0] and index <= pivotRange[1]:
+            return arr[index]
+        elif index < pivotRange[0]:
+            return select(arr, begin, pivotRange[0]-1, index)
+        else:
+            return select(arr, pivotRange[1]+1, end, index)
+
+    def medianOfMedian(arr, begin, end):
+        num = end - begin + 1
+        offset = 0 if num % 5 == 0 else 1
+        res = [0 for i in range(num//5 + offset)]
+        for i in range(len(res)):
+            start = begin + i * 5
+            last = start + 4 if start + 4 <= end else end
+            res[i] = median(arr, start, last)
+        return select(res, 0, len(res) - 1, len(res) // 2)
+
+    def median(arr, begin, end):
+        insertSorts(arr, begin, end)
+        mid = (begin + end) // 2
+        return arr[mid] if (end - begin + 1) % 2 == 1 else arr[mid+1]
+
+    def insertSorts(arr, begin, end):
+        for i in range(begin+1, end+1):
+            tmp = arr[i]
+            j = i
+            while j > begin and tmp < arr[j-1]:
+                arr[j] = arr[j-1]
+                j -= 1
+            arr[j] = tmp
+
+    def partition(arr, begin, end, pivot):
+        small = begin - 1
+        cur = begin 
+        big = end + 1
+        while cur != big:
+            if arr[cur] == pivot:
+                cur += 1
+            elif arr[cur] < pivot:
+                arr[small+1], arr[cur] = arr[cur], arr[small+1]
+                small += 1
+                cur += 1
+            else:
+                arr[cur], arr[big-1] = arr[big-1], arr[cur]
+                big -= 1
+        ran = []
+        ran.append(small+1)
+        ran.append(big-1)
+        return ran
+
+数组与矩阵---需要排序的最短子数组长度
+2017年09月10日 18:00:49
+阅读数：92
+【题目】
+
+　　给定一个无序数组arr，求出需要排序的最短子数组长度。 
+　　例如： arr = [1, 5, 3, 4, 2, 6, 7]返回4，因为只有[5, 3, 4, 2]需要排序。
+
+【基本思路】
+
+　　解决这个问题可以做到时间复杂度O(N)，空间复杂度O(1)。 
+　　 
+　　首先从右到左遍历数组，使用两个变量，minOne记录遍历过程中出现的最小元素，minIndex表示需要调整的子数组的起始下标位置，开始时minOne = arr[len(arr)-1]，minIndex = -1。遍历的过程中，如果发现此时的元素arr[i]的值大于minOne，说明如果要使数组有序，arr[i]必须要向右移动，所以令minIndex = i；如果arr[i] 小于minOne，则令minOne = arr[i]。遍历结束后，如果minIndex 等于-1，说明该数组本身就是有序的，返回0,；否则minIndex就是需要排序数组的起始位置。
+
+　　同理，我们再从左到右遍历一次数组，使用maxOne，maxIndex两个变量即可找到需要排序数组的末尾下表位置，该子数组的长度即可得到。
+
+【代码实现】
+
+#python3.5
+def getMinLength(arr):
+    if arr == None or len(arr) < 2:
+        return 0
+    minOne = arr[-1]
+    minIndex = -1
+    for i in range(len(arr)-2, -1, -1):
+        if arr[i] > minOne:
+            minIndex = i
+        else:
+            minOne = arr[i]
+    if minIndex == -1:
+        return 0
+    maxOne = arr[0]
+    maxIndex = -1
+    for i in range(1, len(arr)):
+        if arr[i] < maxOne:
+            maxIndex = i
+        else:
+            maxOne = arr[i]
+    return maxIndex - minIndex + 1
+
+
+数组与矩阵---在数组中找到出现次数大于一半(N/K)的数
+2017年09月13日 09:41:57
+阅读数：149
+【题目】
+
+　　给定一个整型数组arr，打印其中出现次数大于一半的数，如果没有这样的数，打印提示信息。要求时间复杂度为O(N)，空间复杂度为O(1)。
+
+【进阶】
+
+　　给定一个整型数组arr，再给定一个整型K，打印所有出现次数大于N/K的数，如果没有这样的数，打印提示信息。要求时间复杂度为O(N*K)，额外空间复杂度O(K)。
+
+【基本思路】
+
+　　对于原问题和进阶问题，都可以使用哈希表记录每个数出现的次数，但是额外空间复杂度为O(N)，不符合题意。正确的做法是，一次在数组中删除k个不同的数，不停的删除，直到剩下的元素的种类不足k。如果一个数出现的次数大于N/K，那么这个数一定会被留下来。需要注意的是：出现N/K次的数一定会留下来，但是留下来的数未必就是出现N//K次的数，比如arr = [1, 2, 3]，k = 2。
+
+　　接下来要解决的问题就是如何不停删除k个不同的数，这里以 k = 2（出现次数大于一半）为例。
+
+　　采用阵地攻守的思想： 
+　　第一个数字作为第一个士兵，守阵地；count = 1； 
+　　遇到相同元素，count++; 
+　　遇到不相同元素，即为敌人，同归于尽,count- -；当遇到count为0的情况，又以新的i值作为守阵地的士兵，继续下去，到最后还留在阵地上的士兵，有可能是主元素。 
+　　再加一次循环，记录这个士兵的个数看是否大于数组一般即可。 
+　　（摘自牛客网某网友分享） 
+　　 
+　　具体实现如下： 
+　　 
+　　首先定义两个变量，cand = 0，times = 0。cand表示目前的候选元素，times表示该元素出现的次数。依次遍历数组，如果当前times = 0表示此时没有候选元素，将arr[i]赋值给cand；如果times != 0，考虑两种情况：　　 
+　　<1> 如果arr[i] == cand，说明当前没有找到与cand不同的数，此时令cand出现的次数加1，即times+1；　　 
+　　<2> 如果 arr[i] != cand，说明此时找到了另一个不同的数，那么令cand的次数减1，如果减完之后times == 0，说明候选元素被消耗完了，数组中的下一个元素就又会变成候选元素。　　 
+　　如此反复，遍历完数组后，出现次数大于一半的数一定就是cand。这时我们还要再遍历一次数组，判断cand出现的次数是否大于一半。
+
+下面是使用python3.5实现的代码：
+
+def printHalfMajor(arr):
+    if arr == None or len(arr) == 0:
+        print("No such number!")
+        return
+    cand = 0
+    times = 0
+    for i in range(len(arr)):
+        if times == 0:
+            cand = arr[i]
+            times += 1
+        elif arr[i] == cand:
+            times += 1
+        else:
+            times -= 1
+    times = 0
+    for i in range(len(arr)):
+        if arr[i] == cand:
+            times += 1
+    if times > len(arr) // 2:
+        print(cand)
+    else:
+        print("No such number!")
+
+进阶问题和原问题的解题思路一样，一次删除k个不同的数，直到剩下的数的种类不足k。原问题中我们，我们使用了一个候选cand找到了出现次数大于N / K的数，进阶问题中，我们只要使用 K - 1个候选元素即可。详情见如下代码：
+
+def printKMajor(arr, k):
+    if arr == None or len(arr) == 0 or k < 2:
+        print("No such number!")
+        return
+    map = {}
+    moveMap = {}
+    for i in range(len(arr)):
+        if arr[i] in map:
+            map[arr[i]] += 1
+        else:
+            if len(map) == k-1:
+                for key in map:
+                    map[key] -= 1
+                    if map[key] == 0:　
+                        moveMap[key] = 1  #记录要删除的字典元素，不可直接删除
+                for key in moveMap:
+                    del map[key]
+                moveMap.clear()
+            else:
+                map[arr[i]] = 1
+    times = 0
+    flag = True
+    for key in map:
+        for i in range(len(arr)):
+            if arr[i] == key:
+                times += 1
+        if times > len(arr) // k:
+            print(key,end=' ')
+            flag = False
+        times = 0
+    print("No such number!" if flag else '')
+
+数组与矩阵---在行列都排好的矩阵中找数
+2017年09月14日 18:09:51
+阅读数：89
+【题目】
+
+　　给定一个N×M的整型矩阵matrix和一个正数K，matrix的每一行每一列都是排好序的。实现一个函数，判断K是否在matrix中。 
+　　例如： 
+　　0,　1,　2,　5 
+　　2,　3,　4,　7 
+　　4,　4,　4,　8 
+　　5,　7,　7,　9 
+如果K为7，返回True；如果K为6，返回False。 
+要求时间复杂度O(N+M)，空间复杂度O(1)。
+
+【基本思路】
+
+　　从第一行最后一列位置(arr[i][j])开始，如果等于K值，直接返回True；如果arr[i][j] < K，向下移动位置，即 i += 1，再判断此时arr[i][j]是否等于K；如果arr[i][j] > K，向左移动位置，即 j -= 1，再判断此时是否等于K。如果遍历的位置超出了矩阵的范围，返回False。 
+　　同样的思路，从左下角的位置开始移动也可以。
+
+下面是使用python3.5实现的代码：
+
+def isContains(mat, k):
+    if mat == None or len(mat) == 0 or len(mat[0]) == 0:
+        return False
+    row = 0
+    col = len(mat[0]) - 1
+    while row < len(mat) and col >= 0:
+        if mat[row][col] == k:
+            return True
+        elif mat[row][col] < k:
+            row += 1
+        else:
+            col -= 1
+    return False
+
+数组与矩阵---最长可整合子数组的长度
+2017年09月14日 18:26:37
+阅读数：141
+【题目】
+
+　　先给出可整合数组的定义。如果一个数组在排序后，每相邻两个数的差的绝对值都是1，则该数组为可整合数组。例如，[5,3,4,6,2]排序之后为[2,3,4,5,6]，符合条件，所以这个数组为可整合数组。 
+　　给定一个整型数组arr，请返回其中最大可整合子数组的长度。例如，[5,5,3,2,6,4,3]的最大可整合子数组为[5,3,2,6,4]，所以返回5
+
+【基本思路】
+
+　　方法一。时间复杂度O(N^3 logN)。 
+　　穷举每一种子数组情况，然后对每一个子数组排序，判断是否满足可整合数组的条件即可。特别注意：在处理子数组的时候要复制一个新的数组，不能改变数组中原有的位置。一共有N^2个子数组，排序的时间复杂度是O(logN)，所以总的时间复杂度是O(N^3logN)。
+
+下面是使用python3.5实现的代码：
+
+def getMaxIntegratedLength(arr):
+    def isIntergrated(arr):
+        arr.sort()  #切片产生的是新列表，不需要克隆
+        for i in range(1, len(arr)):
+            if arr[i]-arr[i-1] != 1:
+                return False
+        return True
+
+    if arr == None or len(arr) == 0:
+        return 0
+    length = 0
+    for i in range(len(arr)):
+        for j in range(i, len(arr)):
+            if isIntergrated(arr[i : j+1]):
+                length = max(length, j-i+1)
+    return length
+
+　　 
+　　方法二。时间复杂度O(N^2)。 
+　　依旧是穷举每一个子数组，但是在判断子数组是否是可整合数组时并不采用排序的方法，而是采用如下方法：
+
+判断子数组中是否有重复元素，如果有，肯定不是可整合数组。这个过程可以使用哈希表完成。
+
+找到子数组中的最大值max和最小值min，及其相应的下表 i 和 j ，如果 max - min == j - i，则该子数组一定是可整合数组；否则不是。
+
+这个过程的时间复杂度O(1)，所有整体的时间复杂度是O(N^2)。实现代码如下：
+
+def getMaxIntegratedLength2(arr):
+    if arr == None or len(arr) == 0:
+        return 0
+    length = 0
+    map = {}
+    for i in range(len(arr)):
+        maxEle = -sys.maxsize
+        minEle = sys.maxsize
+        for j in range(i, len(arr)):
+            if arr[j] in map:
+                break
+            map[arr[j]] = 1
+            maxEle = max(maxEle, arr[j])
+            minEle = min(minEle, arr[j])
+            if maxEle - minEle == j - i:
+                length = max(length, j - i + 1)
+        map.clear()
+    return length
+
+
+数组与矩阵---不重复打印排序数组中相加和为给定值的所有二元组和三元组
+2017年09月14日 21:15:11
+阅读数：96
+【题目】
+
+　　给定排序数组arr和整数k，不重复打印arr中所有相加和为k的不降序二元组。例如，arr = [-8, -4, -3, 0, 1, 2, 4, 5, 8, 9]，k = 10，打印结果为：1,9　2,8
+
+【补充题目】
+
+　　给定排序数组arr和整数k，不重复打印arr中所有相加和为k的不降序三元组。例如，arr = [-8, -4, -3, 0, 1, 2, 4, 5, 8, 9]，k = 10，打印结果为： -4, 5, 9 　-3, 4, 9　 -3, 5, 8　 0, 1, 9　 0, 2, 8　 1, 4, 5
+
+【基本思路】
+
+　　利用排序后数组的特点，可以设置两个指针left和right，left从左边开始移动，right从右边开始移动。初始时 left = 0，right = len(arr) - 1。之后比较 arr[left] + arr[right] 和 k ，情况如下：
+
+如果arr[left] + arr[right] == k，满足条件，将这个两个元素打印出来
+如果arr[left] + arr[right] < k，说明需要加一个更大的数，令left加1
+如果arr[left] + arr[right] > k，说明需要加一个更小的数，令right减1
+计算的过程中要判断打印的元组之前是否打印过，只需要每次打印的时候检查 arr[left] 是否等于 arr[left-1]。整个时间复杂度O(N)。
+
+下面是使用python3.5实现的代码。
+
+def printUniquePair(arr, k):
+    if arr == None or len(arr) < 2:
+        return
+    left = 0
+    right = len(arr) - 1
+    while left < right:
+        sum = arr[left] + arr[right]
+        if sum == k:
+            if left == 0 or arr[left] != arr[left-1]:
+                print(str(arr[left]) + "," + str(arr[right]))
+                left += 1
+                right -= 1
+        elif sum > k:
+            right -= 1
+        else:
+            left += 1
+
+　　打印三元组的方法类似。只需要提前确定第一个元素（假设为a），剩下的两个元素只需要按照打印二元组的方法找累加和为 k - a 的二元组。为了不重复打印，在确定第一个元素的时候也要判断是否之前出现过。实现代码如下：
+
+def printUniqueTriad(arr, k):
+    if arr == None or len(arr) < 3:
+        return
+    for i in range(len(arr)):
+        if i == 0 or arr[i] != arr[i-1]:
+            left = i + 1
+            right = len(arr) - 1
+            while left < right:
+                sum = arr[left] + arr[right]
+                if sum == k - arr[i]:
+                    if left == i+1 or arr[left] != arr[left-1]:
+                        print(str(arr[i]) + "," + str(arr[left]) + "," + str(arr[right]))
+                        left += 1
+                        right -= 1
+                elif sum > k - arr[i]:
+                    right -= 1
+                else:
+                    left += 1
+
+
+数组与矩阵---未排序正数数组中累加和为指定值的最长子数组长度
+2017年09月14日 21:43:24
+阅读数：94
+【题目】
+
+　　给定一个数组arr，该数组无序，但每个值都为正数，在给定一个正数k。求arr中所有的子数组中所有元素累加为k的最长子数组长度。 
+　　 
+　　例如，arr = [1,2,1,1,1]，k = 3. 
+　　累加和为3的最长子数组为[1,1,1]，所以返回结果为3。
+
+【基本思路】
+
+　　使用两个指针left和right，代表子数组的范围，初始时都为 0。使用变量sum记录子数组的累加和，初始为arr[0]。即arr[0…0]的累加和。根据sum与k的比较结果确定指针的移动：
+
+　　 1、如果 sum == k，说明目前子数组的累加和满足条件，该子数组的长度可知 right - left + 1。因为整个数组元素都是正数，所以，在扩展该子数组显然不可能等于k，所以我们应该令left加1，开始考察以 left + 1 位置开始的子数组，同时令 sum -= arr[left].
+
+　　 2、如果 sum < k，说明还需要加上 right 后面的元素，所以令right + 1，同时令 sum += arr[right+1]。这里需要注意 right + 1 后是否越界。 
+　　 
+　　 3、如果 sum > k，说明此时子数组的累计和已经大于k，所以令left + 1 表示开始考虑以 left + 1 开始的子数组，同时令 sum -= arr[left].
+
+【代码实现】
+
+#python3.5
+def getMaxLength(arr, k):
+    if arr == None or len(arr) == 0 or k < 1:
+        return 0
+    left = 0
+    right = 0
+    length = 0
+    sum = arr[0]
+    while left < len(arr) and right < len(arr):
+        if sum == k:
+            length = max(length, right-left+1)
+            sum -= arr[left]
+            left += 1
+        elif sum > k:
+            sum -= arr[left]
+            left -= 1
+        else:
+            right += 1
+            if right == len(arr):
+                break
+            sum += arr[right]
+    return length
+
+
+数组与矩阵---未排序数组中累加和为给定值的最长子数组系列问题
+2017年09月16日 22:23:13
+阅读数：89
+【题目】
+
+　　给定一个无序数组arr，其中元素可正、可负、可 0，给定一个整数k。求arr所有子数组中累加和为k的最长子数组长度。
+
+【补充问题】
+
+　　给定一个无序数组arr，其中元素可正、可负、可 0。求arr所有子数组中正数与负数个数相同的最长子数组长度。
+
+【补充问题】
+
+　　给定一个无序数组arr，其中元素只是 1 或 0。求arr所有的子数组中 0 和 1 个数相等的最长数组长度。
+
+【基本思路】
+
+　　原问题。使用一个哈希表map，记录每一个累加和情况出现的位置，相同的累加和只记录出现最早的位置。
+
+　　从左到右遍历数组，假设遍历到位置 i，记录 arr[0…i] 的累加和 sum，如果该累加和不存在于map中，将该 sum 作为 key， i 作为 value 添加到map中；否则不进行添加。接下来判断 sum - k 这个累加和是否存在与map中，如果存在的话，假设位置记为 index，那么可想而知，i - index 其实就是一个累加和为k的子数组长度。使用一个全局变量保存遍历到的最长子数组长度。继续遍历数组按照上述方法寻找其他的累加和为k的子数组。
+
+　　这里我们试着考虑一个情况，假设我们遍历到位置 i，发现此时累加和为k，很显然，这满足题意，arr[0…i] 就是一个累加和为 k 的子数组，但是我们发现，如果我们按照上述方法在map中寻找 sum - k 的元素，也就是 0，map 中是不会有 0 这个元素的，所以最终这个子数组会被忽略。所以在这里强调很重要的一点：map初始的时候必须要添加一个key = 0、value = -1 的键值对，这样可以避免以位置 0 开头的子数组的丢失。
+
+【代码实现】
+
+#python3.5
+def maxLength(arr, k):
+    if arr == None or len(arr) == 0:
+        return 0
+    map = {}
+    map[0] = -1
+    sum = 0
+    length = 0
+    for i in range(len(arr)):
+        sum += arr[i]
+        if sum not in map:
+            map[sum] = i
+        if sum - k in map:
+            length = max(length, i - map[sum-k])
+    return length
+
+　　对于补充问题其实就是原问题的简单变形。第一个补充问题，只要将所有的正数变成为 1，所有的负数变成为 -1，只要找到数组中累加和为 0 的最长子数组长度即可。对于补充问题二，将所有的 0 变成为 -1，只要找到数组中累加和为 0 的最长子数组长度即可。代码略。
+
+数组与矩阵---未排序数组中累加和小于或等于给定值的最长子数组问题
+2017年09月17日 23:50:52
+阅读数：96
+【题目】
+
+　　给定一个无序数组arr，其中元素可正、可负、可0，给定一个整数k。求arr所有的子数组中累加和小于或等于k的最长子数组长度。 
+　　 
+　　例如：arr = [3, -2, -4, 0, 6]，k = -2，相加和小于或等于-2的最长子数组为[3, -2, -4, 0]，所以结果返回4。
+
+【基本思路】
+
+　　方法一：时间复杂度O(NlogN)，空间复杂度O(N)。 
+　　 
+　　依次求以数组每个位置结尾的累加和小于或等于 k 的最长子数组长度。如何找呢？首先生成每个位置的累加和数组 sumArr，对于每一个位置 i，要求以该位置结尾的累加和小于或等于k的最长子数组，实际上只要找到 sumArr[0…i] 中第一个大于或等于sum-k的位置，假设位置为 index，那么 arr[index+1…i] 就是以 i 位置结尾的累加和小于或等于 k 的最长子数组。
+
+　　那么如何快速的求出 sumArr[0…i] 中第一个大于或等于 sum-k 的位置呢？假设累加和数组sumArr = [0,1, 3, 2, 7, 5]。注意这里数组的第一项0表示没有任何一个数时的累加和，它的存在是为了防止以 0 位置开头的子数组的丢失（这个在未排序数组中累加和为给定值的最长子数组中已经分析过）。对于数组sumArr我们可以将它转变为 [0, 1, 3, 3, 7, 7]，为什么呢？因为我们只关心第一个大于 sum-k 的位置，如果累加和为 2 已经大于 sum-k，那么累加和 3 必定也大于 sum-k，所以只要保留一个更大的、出现更早的累加和就可以。转变后的数组很显然是一个有序数组，那么我们就可以使用二分查找在 logN 的时间复杂度内找到第一个大于或等于 sum-k 的位置。如果不转变成有序数组，很显然，我们需要用 N 的复杂度去遍历寻找满足条件的位置。
+
+　　具体实现参见如下代码：
+
+#python3.5
+def maxLen(arr, k):
+    def getLessIndex(h, num, index):
+        left = 0
+        right = index
+        res = 1
+        while left <= right:
+            mid = (left + right) // 2
+            if h[mid] >= num:
+                res = mid
+                right = mid - 1
+            else:
+                left = mid + 1
+        return res
+
+    if arr == None or len(arr) == 0:
+        return 0
+    sum = 0
+    length = 0
+    h = [0 for i in range(len(arr)+1)]
+    for i in range(1, len(h)):
+        sum += arr[i-1]
+        h[i] = max(h[i-1], sum)
+    sum = 0
+    for i in range(len(arr)):
+        sum += arr[i]
+        pre = getLessIndex(h, sum-k, i)  #这个位置是h中的下标，注意转换成arr中的下标
+        tmpLen = 0 if pre == -1 else i-pre+1
+        length = max(length, tmpLen)
+    return length
+
+　　方法二：时间复杂度O(N)，空间复杂度O(N)。
+
+#python3.5
+def maxLen2(arr, k):
+    if arr == None or len(arr) == 0:
+        return 0
+    help = [0 for i in range(len(arr))]   #以i位置开头能达到的最小累加和
+    help[-1] = arr[-1]
+    map = {}   #以位置i开头的最小累加和数组的最右位置
+    map[len(arr)-1] = len(arr) - 1
+    for i in range(len(arr)-2, -1, -1):
+        if help[i+1] <= 0:
+            help[i] = help[i+1] + arr[i]
+            map[i] = map[i+1]
+        else:
+            help[i] = arr[i]
+            map[i] = i
+    res = 0   #全局变量记录最大子数组长度
+    end = 0   #子数组右边界的下一个位置
+    sum = 0   #子数组累加和
+    for i in range(len(arr)):
+        #计算以i位置开头满足条件的最大子数组
+        while end < len(arr) and sum + help[end] <= k:
+            sum += help[end]
+            end = map[end] + 1
+        #更新最大子数组长度
+        res = max(res, end - i)
+        #子数组左边界向右移动一位
+        sum -= arr[i] if end > i else 0
+        #更新end
+        end = end if end > i else i + 1
+    return res
+
+
+数组与矩阵---计算数组的小和
+2017年09月18日 09:19:36
+阅读数：397
+【题目】
+
+　　数组小和的定义如下： 
+　　例如：数组s = [1, 3, 5, 2, 4, 6]，在s[0]的左边小于或者等于s[0]的数的和为0，在s[1]的左边小于或等于s[1]的数的和为1……将所有位置的左边比它小或者等于的数的和相加起来就是小和。 
+　　给定一个数组，实现函数返回s的小和。
+
+【基本思路】
+
+　　最简单易懂的方法，就是依次遍历数组每一个位置 i，然后再遍历一次找到 i 左边所有小于或者等于 s[i] 的数，累加即可。该时间复杂度为O(N^2)。
+
+　　我们可以换一种思路考虑这个问题，对于每一个位置 i 的值s[i]，我们计算它比右边的几个数小或者等于，假设这样的数有 num 个，那么在最后的小和中，s[i]提供的值的总和就是s[i] * num。显而易见，将每一个位置的 s[i] * num 加起来就是最终的小和。
+
+　　使用归并排序的过程可以达到这个目的，试想，在归并排序的组间合并过程中，左右两组都已经有序。假设左组为left[]，右组为right[]，并分别从位置 i 和 j 开始比较。如果left[i] <= right[j]，可以肯定right数组 j 位置右边的所有位置（假设有n个）的值都一定比left[i]大或等于，所以会产生一个小和left[i] * n。当然这时的n不是原数组中所有在left[i]右边比left[i]大或等于的数，因为left和right只是原数组中的两个子数组。
+
+　　整个归并过程该怎么进行就怎么进行，排序过程没有任何变化，只是在组间合并的时候计算所有产生的小和并累加起来就是最终的结果。整个过程时间复杂度O(NlogN)。
+
+下面是用python3.5实现的代码。
+
+def getSmallSum(arr):
+    def mergeSort(arr, start, end):
+        if start == end:
+            return 0
+        mid = (start + end) // 2
+        return mergeSort(arr, start, mid) + mergeSort(arr, mid+1, end) + merge(arr, start, mid, end)
+
+    def merge(arr, start, mid, end):
+        left = start
+        right = mid + 1
+        res = []
+        sum = 0
+        while left <= mid and right <= end:
+            if arr[left] < arr[right]:
+                res.append(arr[left])
+                sum += arr[left] * (end - right + 1)
+                left += 1
+            else:
+                res.append(arr[right])
+                right += 1
+        res += arr[left : mid+1]
+        res += arr[right : end+1]
+        for i in range(start, end+1):
+            arr[i] = res.pop(0)
+        return sum
+
+
+    if arr == None or len(arr) == 0:
+        return 0
+    return mergeSort(arr, 0, len(arr)-1)
+
+
+数组与矩阵---自然数组的排序
+2017年09月18日 09:57:26
+阅读数：295
+【题目】
+
+　　给定一个长度为N的整型数组arr，其中有N个互不相等的自然数1～N，请实现arr的排序，但是不要把下标0～N-1位置上的数通过直接赋值的方式替换成1～N。
+
+【基本思路】
+
+　　arr调整之后应该满足arr[index] = index + 1.
+
+方法一。
+
+从左到右遍历数组，假设遍历到位置 i
+
+如果arr[i] == i+1，说明当前的位置不需要调整，继续遍历下一个位置
+
+如果arr[i] != i+1，说明arr[i]不应该放在当前位置，所以我们将arr[i]调整到正确的位置arr[i]-1，同时，如果arr[i]如果能调整到位置arr[i] - 1，说明arr[i] - 1位置上的数也放错位置了，继续将它调整到正确的位置。当跳了一圈回到位置 i 后，会发现此时arr[i] == i+1，继续遍历数组执行同样的操作
+下面是使用python3.5实现的代码。
+
+def sort1(arr):
+    if arr == None or len(arr) == 0:
+        return
+    for i in range(len(arr)):
+        tmp = arr[i]
+        while arr[i] != i+1:
+            next = arr[tmp-1]
+            arr[tmp-1] = tmp
+            tmp = next
+    return arr
+
+方法二。
+
+从左到右遍历数组，假设遍历到的当前位置为i
+
+如果arr[i] == i+1，说明当前的位置不需要调整，继续遍历下一个位置
+
+如果arr[i] != i+1，说明arr[i]不应该放在当前位置，接下来我们将arr[i]和arr[arr[i]-1]进行交换，这样arr[i]就放到了正确的位置，同时，如果此位置的新值，即arr[arr[i]-1]也不等于 i+1，那么需要继续交换，直到满足为止。
+下面是用python3.5实现的代码。
+
+def sort2(arr):
+    if arr == None or len(arr) == 0:
+        return
+    for i in range(len(arr)):
+        while arr[i] != i+1:
+            tmp = arr[arr[i]-1]
+            arr[arr[i]-1] = arr[i]
+            arr[i] = tmp
+    return arr
+
+
+数组与矩阵---奇数下标都是奇数或者偶数下标都是偶数
+2017年09月18日 16:48:06
+阅读数：339
+【题目】
+
+　　给定一个长度不小于2的数组arr，实现一个函数调整arr，要么让所有的偶数下标都是偶数，要么让所有的奇数下标都是奇数。要求时间复杂度O(N)，空间复杂度O(1)。
+
+【基本思路】
+
+　　使用两个指针even、odd。odd一直指向奇数位置，even一直指向偶数位置。初始是 even = 0、odd = 1。不断的检查数组最后一个数，如果该数是奇数就和odd位置的数交换，同时，odd += ２；如果是偶数就和even位置的数交换，同时，even += ２。如果even和odd有一个发生越界，调整结束。
+
+【代码实现】
+
+def modify(arr):
+    if arr == None or len(arr) < 2:
+        return
+    even = 0
+    odd = 1
+    while even < len(arr) and odd < len(arr):
+        if arr[-1] & 1 == 0:
+            arr[even], arr[-1] = arr[-1], arr[even]
+            even += 2
+        else:
+            arr[odd], arr[-1] = arr[-1], arr[odd]
+            odd += 2
+    return arr
+
+
+数组与矩阵问题---子数组的最大累加和问题
+2017年09月18日 17:43:22
+阅读数：262
+【题目】
+
+　　给定一个数组arr，返回子数组的最大累加和， 
+　　例如，arr = [1, -2, 3, 5, -2, 6, 1]，所有的子数组中，[3, 5, -2, 6]可以累加出最大的累加和为12，所以返回12。
+
+【基本思路】
+
+　　使用一个变量curSum记录每一步的累加和，遍历到正数curSum增加，遍历到负数减小。当curSum < 0，说明累加到当前位置出现了小于0的结果，那么累加的这一部分肯定不能作为最大累加和子数组的前缀，此时令curSum = 0。使用一个全局变量记录出现的最大累加和即可。
+
+下面是使用python3.5实现的代码。
+
+def maxSum(arr):
+    if arr == None or len(arr) == 0:
+        return
+    maxSum = -sys.maxsize
+    curSum = 0
+    for i in range(len(arr)):
+        curSum += arr[i]
+        maxSum = max(maxSum, curSum)
+        curSum = curSum if curSum > 0 else 0
+    return maxSum
+
+数组与矩阵---子矩阵的最大累加和问题
+2017年09月18日 18:04:32
+阅读数：255
+【题目】
+
+　　给定一个矩阵matrix，其中的值有正、有负、有0，返回子矩阵的最大累加和。 
+　　例如，matrix为： 
+　　-1　-1　-1 
+　　-1　 2　 2 
+　　-1　-1　-1 
+　　其中最大累加和的子矩阵为： 
+　　2　2 
+　　所以返回4。
+
+【基本思路】
+
+　　首先看这样一个例子，假设一个2行4列的矩阵如下： 
+　　-2 　3 　-5 　7 
+　　1　 4 　-1　 -3 
+　　如何求必须含有2行元素的子矩阵中的最大累加和？可以把两列的元素相加，然后得到累加数组[-1, 7, -6, 4]，接下来求这个累加数组的最大累加和，结果就是7，且这个子矩阵数： 
+　　3 
+　　4 
+　　也就是说，如果一个矩阵一共有k行且限定必须含有k行元素的情况下，我们只要把矩阵的每一列的k个元素累加生成一个累加数组，然后求出这个数组的最大累加和，这个最大累加和就是必须含有k行元素的子矩阵中的最大累加和。 
+　　对于整个N*N的矩阵来说，我们需要考虑以第一行开头的一行矩阵、两行矩阵、三行矩阵…N行矩阵；以及以第二行开头的一行矩阵、二行矩阵…N-1行矩阵；……以最后一行开头的一行矩阵。将所有的这些情况中的最大累加和找到即可。一共有O(N2)中情况，找到累加数组中最大累加和的时间复杂度是O(N)，所以最终的时间复杂度是O(N3)。
+
+【代码实现】
+
+#python3.5
+def matrixMaxSum(mat):
+    if mat == None or len(mat) == 0 or len(mat[0]) == 0:
+        return
+    maxSum = -sys.maxsize
+    for i in range(len(mat)):    #从第i行开始
+        s = [0 for i in range(len(mat[0]))]
+        for j in range(i, len(mat)):    #计算第i行到第j行的累加和
+            curSum = 0
+            for k in range(len(mat[0])):    #计算一维数组的累加和
+                s[k] += mat[j][k]
+                curSum += s[k]
+                maxSum = max(maxSum, curSum)
+                curSum = curSum if curSum > 0 else 0
+    return maxSum
+
+数组与矩阵---在数组中找到一个局部最小的位置
+2017年09月19日 08:47:49
+阅读数：285
+【题目】
+
+　　定义局部最小的概念。arr长度为1时，arr[0]是局部最小。arr的长度为N(N>1)时，如果arr[0] < arr[1]，那么arr[0]是局部最小；如果arr[N-1] < arr[N-2]，那么arr[N-1]是局部最小；如果 0 < i < N-1，既有 arr[i] < arr[i-1]，又有arr[i] < arr[i+1]，那么arr[i]是局部最小。 
+　　给定无序数组arr，已知arr中任意两个相邻的数都不相等。写一个函数，只返回arr中任意一个局部最小出现的位置即可。
+
+【基本思路】
+
+　　本题可以使用二分查找做到时间复杂度O(logN)，空间复杂度O(1)，具体步骤如下：
+
+如果arr长度为1或者，arr[0] < arr[1]，返回0；如果arr[N-1] < arr[N-2]，返回N-1
+
+如果arr长度大于2且arr的左右两头都不是局部最小，令left = 1，right = N-2，然后开始二分查找：
+
+（1）令 mid = (left + right) // 2
+
+（2）如果arr[mid] > arr[mid-1]，可知在arr[left…mid-1]上肯定存在局部最小值，令right = mid - 1
+
+（3）如果arr[mid] > arr[mid+1]，可知在arr[mid+1…right]上肯定存在局部最小值，令left = mid + 1
+
+（4）如果不满足（2）和（3），则mid本身就是局部最小，返回mid即可
+
+（5）重复二分查找步骤，直到left > right
+
+【代码实现】
+
+def indexOfLocalMin(arr):
+    if arr == None or len(arr) == 0:
+        return -1
+    if len(arr) == 1 or arr[0] < arr[1]:
+        return arr[0]
+    if arr[-1] < arr[-2]:
+        return arr[-1]
+    left = 1
+    right = len(arr) - 2
+    while left <= right:
+        mid = (left + right) // 2
+        if arr[mid] > arr[mid-1]:
+            right = mid - 1
+        elif arr[mid] > arr[mid+1]:
+            left = mid + 1
+        else:
+            return mid
+
+
+数组与矩阵---数组中子数组的最大累乘积
+2017年09月19日 09:14:12
+阅读数：420
+【题目】
+
+　　给定一个double类型的数组arr，其中的元素可正、可负、可0，返回子数组累乘的最大乘积。例如，arr = [-2.5, 4, 0, 3, 0.5, 8, -1]，子数组[3, 0.5, 8]累乘可以获得最大的乘积12，所以返回12.
+
+【基本思路】
+
+　　本题可以做到时间复杂度O(N)、空间复杂度O(1).
+
+　　大致思路是，遍历一遍数组，求出以每一个元素结尾的子数组的最大累乘积。如何快速的求出以 i 位置结尾的子数组的最大累积呢？假设以arr[i-1]结尾的最小乘积是min，最大乘积是max。那么，以arr[i]结尾的最大累乘积只可能来自以下三种情况：
+
+可能是max * arr[i]
+
+可能是min * arr[i]，因为数组中可能包含负数，负负得正
+
+可能是arr[i]，因为以arr[i-1]结尾的最大乘积可能小于1
+
+这三种可能的值中最大的那个就作为以 i 位置结尾的最大累乘积，最小的作为最小累乘积，继续遍历下一个位置。
+
+下面是使用python3.5实现的代码。
+
+def maxProduct(arr):
+    if arr == None or len(arr) == 0:
+        return 0
+    maxPro = arr[0]
+    minPro = arr[0]
+    res = 0
+    for i in range(1, len(arr)):
+        maxPro = maxPro * arr[i]
+        minPro = minPro * arr[i]
+        maxPro = max(maxPro, minPro, arr[i])
+        minPro = min(minPro, maxPro, arr[i])
+        res = max(res, maxPro)
+    return res
+
+数组与矩阵---打印N个数组整体最大的TopK
+2017年09月19日 11:29:24
+阅读数：316
+【题目】
+
+　　有N个长度不一的数组，所有的数组都是有序的，请从大到小打印这个N个数组整体最大的前K个数。 
+　　例如，输入含有N行元素的二维数组可以代表N个一维数组。 
+　　219, 405, 538, 845, 971 
+　　148, 558 
+　　52, 99, 348, 691 
+　　再输入整数k = 5，则打印： 
+　　971, 845, 691, 558, 538
+
+【要求】
+
+如果所有数组的元素个数小于K，则从大到小打印所有的数
+要求时间复杂度为O(KlogN)
+【基本思路】
+
+　　本题的解法是利用堆结构和堆排序的过程完成的，具体过程如下：
+
+构建一个大小为N的大根堆，建堆的过程就是把每一个数组的最后一个值，也就是该数组的最大值，依次加入到堆里，这个过程就是建堆的调整过程。
+
+建好堆以后，此时堆顶的元素就是所有数组中最大的元素，打印堆顶元素。
+
+假设堆顶的元素来自 a 数组的 i 位置，那么将堆顶的元素用a[i-1]替换，然后从堆的头部重新调整堆。如果发现此时 a 数组已经没有元素，那么就将堆顶元素与堆尾元素交换，同时令堆的大小减1，仍然是从堆的头部重新调整堆。
+
+每次都可得到一个堆顶元素，打印k个堆顶元素，就是最终的结果。
+
+为了知道每一次的堆顶元素来自哪一个数组的哪一个位置，我们可以定义如下的heap类：
+
+class HeapNode:
+    def __init__(self, value, arrNum, index):
+        self.value = value
+        self.arrNum = arrNum
+        self.index = index
+
+【代码实现】
+
+def printTopK(matrix, k):
+    def heapInsert(heap, i):
+        if i == 0:
+            return
+        parent = (i-1) // 2
+        tmp = heap[i]
+        while tmp.value > heap[parent].value:
+            heap[i] = heap[parent]
+            i = parent
+            parent = (i-1) // 2
+        heap[i] = tmp
+
+    def heapify(heap, i, n):
+        child = 2 * i + 1
+        tmp = heap[i]
+        while child < n:
+            if child < n-1 and heap[child].value < heap[child+1].value:
+                child += 1
+            if heap[child].value > tmp.value:
+                heap[i] = heap[child]
+                i = child
+                child = 2 * i + 1
+            else:
+                break
+        heap[i] = tmp
+
+
+    if matrix == None or len(matrix) == 0:
+        return []
+    heapSize = len(matrix)
+    heap = [0 for i in range(heapSize)]
+    for i in range(len(heap)):
+        index = len(matrix[i]) - 1
+        heap[i] = HeapNode(matrix[i][index], i, index)
+        heapInsert(heap,i)
+    for i in range(k):
+        if heapSize == 0:
+            break
+        print(heap[0].value, end=' ')
+        if heap[0].index != 0:
+            heap[0].value = matrix[heap[0].arrNum][heap[0].index-1]
+            heap[0].index -= 1
+        else:
+            heap[0] = heap[-1]
+            heapSize -= 1
+        heapify(heap, 0, heapSize)
+
+
+数组与矩阵---边界都是1的最大正方形大小
+2017年09月20日 09:56:59
+阅读数：289
+【题目】
+
+　　给定一个N×N的矩阵matrix，在这个矩阵中，只有0和1两种值，返回边框全是1的最大正方形的边长长度。 
+　　例如： 
+　　０　１　１　１　１ 
+　　０　１　０　０　１ 
+　　０　１　０　０　１ 
+　　０　１　０　１　１ 
+　　其中，边框全是1的最大正方形的大小是4*4，返回4。
+
+【基本思路】
+
+　比较容易理解的方法：
+
+矩阵中一共有N*N个位置。Ｏ(N2)
+
+每一个位置都可以成为边长为N~1的正方形的左上角。O(N)
+
+如何检查一个位置是否可以成为边长为Ｎ的正方形的左上角呢？遍历这个边长为Ｎ的正方形边界看是否只由１构成，也就是走过４个边的长度(4N)。O(N)
+
+所以总的时间复杂度O(N4).
+
+　　该方法可以进行优化，将步骤三的时间复杂度降为O(1)，总的时间复杂度降为O(N3)。思路就是通过预处理，得到两个辅助矩阵right、down。right[i][j]的含义是，从位置（i，j）开始，向右一共有多少个连续的1；down[i][j]的含义是，从位置（i，j）开始，向下一共有多少个连续的1。利用动态规划很容易得到这两个辅助矩阵。
+
+　　接下来，如何检查一个位置是否可以成为边长为N的正方形的左上角呢？只要判断边框左上角的位置向右以及向下连续的1的个数是否大于N，以及边框左下角的位置向右连续的1的个数是否大于N、以及边框右上角的位置向下连续的1的个数是否大于N。
+
+下面是使用python3.5实现的代码。
+
+def getMaxSize(mat):
+    def setBorderMap(mat, right, down):
+        row = len(mat) - 1
+        col = len(mat[0]) - 1
+        if mat[row][col] == 1:
+            right[row][col] = 1
+            down[row][col] = 1
+        for i in range(len(mat)-2, -1, -1):
+            if mat[i][col] == 1:
+                right[i][col] = 1
+                down[i][col] = down[i+1][col] + 1
+        for j in range(len(mat[0])-2, -1, -1):
+            if mat[row][j] == 1:
+                right[row][j] = right[row][j+1] + 1
+                down[row][j] = 1
+        for i in range(len(mat)-2, -1, -1):
+            for j in range(len(mat[0])-2, -1, -1):
+                if mat[i][j] == 1:
+                    right[i][j] = right[i][j+1] + 1
+                    down[i][j] = down[i+1][j] + 1
+
+    def hasSizeOfBorder(size, right, down):
+        for i in range(len(mat) - size + 1):
+            for j in range(len(mat[0]) - size + 1):
+                if right[i][j] >= size and down[i][j] >= size and \
+                        right[i+size-1][j] >= size and down[i][j+size-1] >= size:
+                            return True
+        return False
+
+
+    if mat == None or len(mat) == 0 or len(mat[0]) == 0:
+        return 0
+    right = [[0 for i in range(len(mat[0]))] for j in range(len(mat))]
+    down = [[0 for i in range(len(mat[0]))] for j in range(len(mat))]
+    setBorderMap(mat, right, down)
+    for size in range(min(len(mat), len(mat[0])), 0, -1):
+        if hasSizeOfBorder(size, right, down):
+            return size
+    return 0
+
+
+数组与矩阵---不包含本位置值的累乘数组
+2017年09月21日 22:24:50
+阅读数：138
+【题目】
+
+　　给定一个整型数组arr，返回不包含本位置值的累乘数组。 
+　　例如，arr = [2, 3, 4, 1]，返回[12, 8, 24, 6]，即除自己以外，其他位置上的累乘。
+
+【要求】
+
+时间复杂度O(N)
+除需要返回的结果数组外，额外空间复杂度O(1)。
+【基本思路】
+
+　　方法一。使用除法进行实现。所有数的累积记为all，如果数组中不存在0，那么结果数组中每一个位置的值为 all/arr[i]；如果数组中存在一个0，那么除该位置的值为all，其余都是0；如果有两个或者两个以上的0，结果数组全为0。
+
+下面是使用python3.5实现的代码。
+
+def product1(arr):
+    if arr == None or len(arr) < 2:
+        return 
+    all = 1
+    count = 0
+    for i in range(len(arr)):
+        if arr[i] == 0:
+            count += 1
+        else:
+            all *= arr[i]
+    if count == 0:
+        return [all // arr[i] for i in range(len(arr))]
+    res = [0 for i in range(len(arr))]
+    if count == 1:
+        for i in range(len(arr)):
+            if arr[i] == 0:
+                res[i] = all
+                break
+    return res
+
+　　方法二。不使用除法进行实现。分别使用辅助两个数组left和right，其中left表示数组从左到右的累乘结果（即left[i] = arr[0…i]的累乘）；相反，right表示数组从右到左的累乘结果。那么对于结果数组res，res[i] = left[i-1] * right[i+1]。 
+　　实际上，并不需要额外声明两个辅助数组。可以复用结果数组res，即先将res当辅助数组用，再把res调整为结果数组即可。具体实现见如下代码：
+
+def product2(arr):
+    if arr == None or len(arr) < 2:
+        return
+    res = [0 for i in range(len(arr))]
+    res[0] = arr[0]
+    for i in range(1, len(res)):
+        res[i] = res[i-1] * arr[i]
+    tmp = 1
+    for i in range(len(arr)-1, 0, -1):
+        res[i] = res[i-1] * tmp
+        tmp *= arr[i]
+    res[0] = tmp
+    return res
+
+
+数组与矩阵---数组的partiton调整
+2017年09月21日 23:01:41
+阅读数：90
+【题目】
+
+　　给定一个有序数组arr，调整arr使得这个数组的左边部分没有重复元素且升序，而不用保证右半部分是否有序。 
+　　例如，arr = [1, 2, 2, 2, 3, 3, 4, 5, 6, 6, 7, 7, 8, 8, 8, 9]，调整之后arr = [1, 2, 3, 4, 5, 6, 7, 8, 9……]
+
+【补充题目】
+
+　　给定一个数组arr，其中只可能含有0,1,2三个值，请实现arr的排序。 
+　　另一种问法：有一个数组，其中只有红球、蓝球和黄球，请实现红球全放在数组的左边，蓝球放在中间，黄球放在右边。 
+　　另一种问法：有一个数组，再给定一个值k，请实现比k小的数都放在数组的左边，等于k的数都放在数组的中间，比k大的数都放在数组的右边。
+
+【基本思路】
+
+　　原问题。该数组是有序的，只要将重复的元素放置在数组后部分即可。变量left表示数组中无重复且升序的区域范围。初始是为0，表示区域arr[0…0]。从位置1开始遍历数组，如果arr[i] != arr[left]，说明该元素可以加到左区域，这时候将左区域扩大一个单位用来放置arr[i]，将arr[left]和arr[i]交换并令left+1即可；如果arr[i] == arr[left]，说明该元素之前已经出现过，不需要加入到左区域。
+
+下面是使用python3.5实现的代码。
+
+def leftUnique(arr):
+    if arr == None or len(arr) < 2:
+        return arr
+    left = 0
+    right = 1
+    while right < len(arr):
+        if arr[right] != arr[left]:
+            arr[left+1], arr[right] = arr[right], arr[left+1]
+            left += 1
+            right += 1
+        else:
+            right += 1
+    return arr
+
+　　补充问题。变量left和right分别表示左右两个区域，arr[0…left]表示都为0的区域，arr[right…N-1]表示都为2的区域。初始时令left = -1，right = len(arr)，表示区域中无任何元素。令index = 0，使用这个变量做从左到右的遍历，arr[left+1…index]表示都为1的区域。
+
+如果arr[index] == 0，将左区域扩大一个单位来放置该元素，把arr[left+1]和arr[index]交换即可。同时令left、index加1，继续遍历下一个位置。
+
+如果arr[index] == 2，将右区域扩大一个单位来放置该元素，把arr[index]和arr[right-1]交换即可，令right减1，同时，index位置的值被更新，继续从该位置遍历。
+
+如果arr[index] == 1，直接令index加1，继续遍历下一个位置。
+
+具体实现见如下代码：
+
+def sort(arr):
+    if arr == None or len(arr) < 2:
+        return arr
+    left = -1
+    right = len(arr)
+    index = 0
+    while index < right:
+        if arr[index] == 0:
+            arr[left+1], arr[index] = arr[index], arr[left+1]
+            left += 1
+        elif arr[index] == 1:
+            index += 1
+        else:
+            arr[index], arr[right-1] = arr[right-1], arr[index]
+            right -= 1
+    return arr
+
+
+数组与矩阵---求最短通路值
+2017年09月22日 08:55:26
+阅读数：199
+【题目】
+
+　　给定一个整型矩阵matrix表示一个网络，1代表有路，0代表无路，每一个位置只要不越界，都有上下左右四个方向，求从最左上角到最右下角的最短通路值。 
+　　例如，matrix为： 
+　　１　０　１　１　１ 
+　　１　０　１　０　１ 
+　　１　１　１　０　１ 
+　　０　０　０　０　１ 
+　　 通路只有一条，由12个1构成，所以返回12。
+
+【基本思路】
+
+　　使用宽度优先遍历即可。生成map矩阵，map[i][j]的含义是从位置(0, 0)走到位置(i, j)最短的路径值。队列rQ和cQ分别用于存放位置横纵坐标，初始时将位置(0, 0)压入队列。 
+　　 
+　　不断的从队列中弹出一个位置(r, c)，然后看这个位置的上下左右哪个位置有路可走，即matrix中的值为1，将能走的位置的坐标压入队列中，同时设置好在map中的值，即map[r][c] + 1。在这个过程中，需要考虑下一个位置是否之前已经走过，这个情况可以根据map中的值进行判断，如果下一个位置的map值不为0，那么说明之前已经走过，跳过即可。 
+　　 
+　　一直重复上述步骤，直到遇到终点坐标，返回map中相应的值即可。如果rQ和cQ已经为空都没有遍历到终点位置，说明不存在这样的一条路径，返回0. 
+　　 
+　　如果矩阵大小为N*M，这个过程的时间复杂度为O(M*N)。
+
+下面是使用python3.5实现的代码。
+
+def minPathValue(m):
+    def walkTo(map, m, row, col, rQ, cQ, pre):
+        if row < 0 or col < 0 or row == len(m) or col == len(m[0]) \
+                or m[row][col] != 1 or map[row][col] != 0:
+            return
+        rQ.append(row)
+        cQ.append(col)
+        map[row][col] = pre + 1
+
+    if m == None or len(m) == 0 or len(m[0]) == 0 \
+            or m[0][0] != 1 or m[-1][-1] != 1:
+        return 0
+    map = [[0 for i in range(len(m[0]))] for j in range(len(m))]
+    map[0][0] = 1
+    rQ = []
+    cQ = []
+    rQ.append(0)
+    cQ.append(0)
+    while rQ:
+        row = rQ.pop(0)
+        col = cQ.pop(0)
+        if row == len(m)-1 and col == len(m[0])-1:
+            return map[-1][-1]
+        walkTo(map, m, row+1, col, rQ, cQ, map[row][col])
+        walkTo(map, m, row-1, col, rQ, cQ, map[row][col])
+        walkTo(map, m, row, col+1, rQ, cQ, map[row][col])
+        walkTo(map, m, row, col-1, rQ, cQ, map[row][col])
+    return 0
+
+数组与矩阵---数组中未出现的最小正整数
+2017年09月22日 09:38:33
+阅读数：153
+【题目】
+
+　　给定一个无序整型数组arr，找到数组中未出现的最小正整数。 
+　　例如： 
+　　arr = [-1, 2, 3, 4]，返回1 
+　　arr = [1, 2, 3, 4]，返回5
+
+【基本思路】
+
+　　整个过程可以做到时间复杂度O(N)，空间复杂度O(1)。 
+　　 
+　　生成变量left和right，left表示遍历到目前为止，数组中已经包含的正整数的范围是[1…left]，初始时令left = 0表示没有arr目前没有包含任何正整数；right表示遍历到目前为止，在后续情况出现最优的情况下，arr可能包含的正整数的范围是[1, right]，初始时令right = N，表示arr可能包含1～N的所有正整数。 
+　　 
+　　利用left从左到右遍历数组：
+
+如果arr[left] = left + 1。在没有遍历arr[left]之前，arr已经包含的正整数的范围是[1,left]，此时出现了arr[left] = left + 1，说明arr包含的正整数的范围可以扩到[1, left+1]，即令left + 1.
+
+如果arr[left] <= left。在没有遍历arr[left]之前，arr中的正整数的范围已经是[1, left]，所以需要的是[left+1, right]上的数，而此时arr[left] <= left，说明[left+1, right]上少了一个数，所以arr在后续最优的情况下，可能包含的正整数的范围缩小到[1, right-1]，此时把arr最后位置的数arr[r-1]放在位置left上，下一步检查这个数，然后令right - 1.
+
+如果arr[left] > right，与步骤2同理，把arr最后位置的数arr[r-1]放在位置left上，下一步检查这个数，然后令right - 1.
+
+如果arr[arr[left]-1] = arr[left]。如果步骤2、3没中，说明arr[left]是在[left+1, right]范围上的，而且这个数应该放置在arr[left] - 1位置上，但是发现此时arr[left] - 1位置上的数已经为arr[left]，说明这个数出现了两次，既然在[left+1, right]上出现了重复值，那么[left+1, right]范围上的数又少了一个，所以把arr最后位置的数arr[r-1]放在位置left上，下一步检查这个数，然后令right - 1.
+
+如果步骤2、3、4都没中，说明发现了[left+1, right]上的数，并且未发生重复。那么arr[left]应该放在位置arr[left] - 1上，所以把left位置上的值和arr[left] - 1位置上的值交换，下一步继续遍历位置left上的数。
+下面是使用python3.5实现的代码。
+
+def missNum(arr):
+    if arr == None or len(arr) == 0:
+        return
+    left = 0
+    right = len(arr)
+    while left < right:
+        if arr[left] == left + 1:
+            left += 1
+        elif arr[left] <= left or arr[left] > right or arr[arr[left]-1] == arr[left]:
+            arr[left] = arr[right-1]
+            right -= 1
+        else:
+            tmp = arr[left]
+            arr[left] = arr[arr[left]-1]
+            arr[tmp-1] = tmp
+    return left + 1
+
+数组与矩阵---数组排序之后相邻数的最大差值
+2017年09月23日 11:21:18
+阅读数：150
+【题目】
+
+　　给定一个整型数组arr，返回排序后的相邻两数的最大差值 
+　　例如： 
+　　arr = [9, 3, 1, 10]。如果排序，结果为[1, 3, 9, 10]，9和3的差为最大值，故返回6. 
+　　arr = [5, 5, 5, 5]。返回0. 
+　　要求时间复杂度O(N).
+
+【基本思路】
+
+　　利用桶排序的思想（不是直接进行桶排序），可以做到时间复杂度O(N)，空间复杂度O(N)。
+
+　　遍历数组arr，找到最大值max和最小值min。如果数组的长度为N，那么我们准备N+1个桶，把max单独放在第N+1个桶里。arr中[min, max)范围上的数放在1～N号桶里。对于1～N个桶，每个桶负责的区间大小为(max- min) / N。所以对于元素num，它应该被分配进的桶的编号是(num - min) / ((max - min) / N) = (num - min) * N / (max - min)，注意：这里的桶的编号是从0开始计数的。 
+　　 
+　　arr一共有N个数，其中min一定会放在1号桶，max一定会放在N+1号桶，所以如果把N个数放入N+1个桶，其中一定有桶是空的。那么差值最大的情况一定不来自同一个桶内的数。所以，如果arr经过排序，最大差值只可能来自某个非空桶的最小值减去前一个非空桶的最大值。
+
+下面是使用python3.5实现的代码。
+
+def maxGap(arr):
+    def bucket(value, length, maxNum, minNum):
+        return int((value - minNum) * length / (maxNum - minNum))
+
+    if arr == None or len(arr) == 0:
+        return 0
+    length = len(arr)
+    minNum = sys.maxsize
+    maxNum = -sys.maxsize
+    for i in range(len(arr)):
+        minNum = min(minNum, arr[i])
+        maxNum = max(maxNum, arr[i])
+    if minNum == maxNum:
+        return 0
+    hasNum = [False for i in range(length+1)]
+    maxs = [0 for i in range(length+1)]
+    mins = [0 for i in range(length+1)]
+    for i in range(len(arr)):
+        index = bucket(arr[i], length, maxNum, minNum)  #算出桶号
+        maxs[index] = max(maxs[index], arr[i]) if hasNum[index] else arr[i]
+        mins[index] = min(mins[index], arr[i]) if hasNum[index] else arr[i]
+        hasNum[index] = True
+    lastMax = maxs[0]
+    res = 0
+    for i in range(1, length+1):  #计算最大差值
+        if hasNum[i]:
+            res = max(res, mins[i] - lastMax)
+            lastMax = maxs[i]
+    return res
