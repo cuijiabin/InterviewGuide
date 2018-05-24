@@ -33,3 +33,2710 @@ Manacher算法
 丢棋子问题
 画匠问题
 邮局选址问题
+
+
+其他题目---从５随机到７随机及其扩展
+2017年10月17日 09:44:09
+阅读数：149
+【题目】
+
+　　给定一个等概率产生1~5的随机函数 rand1To5如下：
+
+def rand1To5():
+    return int(random.random()*5) + 1
+
+　　除此之外，不使用任何额外的随机机制，请用rand1To5实现等概率随机产生1～7的随机函数rand1To7。
+
+【补充题目】
+
+　　给定一个以p概率产生0，以1-p概率产生1的随机函数rand01p如下：
+
+def rand01p():
+    p = 0.83  #p可以随意改变
+    return 0 if random.random() < p else 1
+
+　　除此之外，不使用任何额外的随机机制，请用rand01p实现等概率随机产生1~6的随机函数rand1To6。
+
+【进阶题目】
+
+　　给定一个等概率随机产生1～M的随机函数rand1ToM如下：
+
+def rand1ToM(m):
+    return int(random.random() * m) + 1
+
+　　除此之外，不能使用任何额外的随机机制。有两个输入参数，分别为m和n，请用rand1ToM(m)实现等概率随机产生1～n的随机函数rand1ToN。
+
+【基本思路】
+
+　　原问题。 
+　　1、rand1To5() 等概率产生1,2,3,4,5 
+　　2、rand1To5()-1 等概率产生0,1,2,3,4 
+　　3、(rand1To5()-1)*5 等概率的产生0,5,10,15,20 
+　　4、(rand1To5()-1)*5+rand1To5()-1 等概率的产生0,1,2,3…23,24 
+　　5、如果步骤4产生的结果大于20，重新随机，直到产生的结果在0~20之间。 
+　　6、步骤5的结果再进行%7，然后再加1，就是最终的结果。
+
+#python3.5
+def rand1To5():
+    return int(random.random()*5) + 1
+
+def rand1To7():
+    num = (rand1To5()-1) * 5 + rand1To5() - 1
+    while num > 20:
+        num = (rand1To5()-1) * 5 + rand1To5() - 1
+    return num % 7 + 1
+
+　　补充题目。 
+　　虽然rand01p方法是以p的概率产生0，以1-p的概率产生1，但是rand01p产生01和10的概率却都是p(1-p)，可以利用这点来实现等概率随机产生0和1的函数。
+
+def rand01():
+    num = rand01p()
+    while num == rand01p():
+        num = rand01p()
+    return num
+
+　　有了等概率产生0和1的函数，接下来的步骤和原问题类似。先实现随机产生0~3的随机函数，再利用0~3的随机函数实现随机产生1~6的随机函数。
+
+def rand01p():
+    p = 0.83
+    return 0 if random.random() < p else 1
+
+def rand01():
+    num = rand01p()
+    while num == rand01p():
+        num = rand01p()
+    return num
+
+def rand0To3():
+    return rand01()*2 + rand01()
+
+def rand1To6():
+    num = rand0To3() * 4 + rand0To3()
+    while num > 11:
+        num = rand0To3() * + rand0To3()
+    return num % 6 + 1
+
+　　进阶题目。 
+　　1、将n-1转换成m进制数，假设结果转换成数组为 k = [a,b,c,d,e] 
+　　2、使用rand1ToM(m)函数产生结果数组 res = [A,B,C,D,E]，如果res所表示的数值大于k所表示的数值，将res丢掉重新随机，直到产生的结果小于或等于k，这时产生的res的范围就在0～n-1之间，但是此时res所表示的数还是m进制的。 
+　　3、将res数组转换成10进制整数。 
+　　4、将步骤3的结果加1就是最终的结果。
+
+def rand1ToM(m):
+    return int(random.random() * m) + 1
+
+def rand1ToN(n, m):
+    def getMSysNum(value, m):
+        res = []
+        while value != 0:
+            res.append(value % m)
+            value //= m
+        return res[::-1]
+
+    def getRandMSysNumLessN(nMSys, m):
+        res = []
+        lastEqual = True
+        index = 0
+        while index < len(nMSys):
+            res.append(rand1ToM(m) - 1)
+            if lastEqual:
+                if res[-1] > nMSys[index]:
+                    index = 0
+                    res = []
+                    continue
+                else:
+                    lastEqual = True if res[-1] == nMSys[index] else False
+            index += 1
+        return res
+
+    def getNumFromMSysNum(mSysNum, m):
+        res = 0
+        for i in range(len(mSysNum)):
+            res = res * m + mSysNum[i]
+        return res
+
+    nMSys = getMSysNum(n-1, m)
+    randNum = getRandMSysNumLessN(nMSys, m)
+    return getNumFromMSysNum(randNum, m) + 1
+
+其他题目---一行代码求两个数的最大公约数
+2017年10月14日 21:47:35
+阅读数：118
+【题目】
+
+　　给定两个不等于0的整数m和n，求m和n的最大公约数。
+
+【基本思路】
+
+　　辗转相除法。用较小数除较大数，再用出现的余数（第一余数）去除除数，再用出现的余数（第二余数）去除第一余数，如此反复，直到最后余数是0为止。如果是求两个数的最大公约数，那么最后的除数就是这两个数的最大公约数。
+
+【代码实现】
+
+#python3.5
+def gcd(m, n):
+    return m if n == 0 else gcd(n, m % n)
+
+
+其他题目---有关阶乘的两个问题
+2017年10月14日 23:11:25
+阅读数：144
+【题目】
+
+　　给定一个非负整数N，返回N！结果的末尾为0的数量。 
+　　例如：3! = 6，结果的末尾没有0，所以返回0。5! = 120，结果的末尾有1个0，返回1。1000000000!，结果的末尾有249999999998个0，返回2499999998。
+
+【进阶题目】
+
+　　给定一个非负整数N，如果用二进制数表达N!的结果，返回最低位的1在哪个位置上，认为最右边的位置为位置0. 
+　　例如：1! = 1，最低位的1在位置0上。2! = 2，最低位的1在1位置上。1000000000!，最低位的1在999999987位置上。
+
+【题目】
+
+　　无论是原问题还是进阶问题，通过计算出真实的阶乘结果后再处理的方法无疑是不合适的，因为阶乘的结果往往很大，非常容易溢出，而且增加计算的复杂性。
+
+　　原问题。 
+　　普通解法。对原问题来说，N!的结果的末尾有多少个0可以等价为在序列1,2,3…N中有多少个因子5。这是因为在 1*2*3*…*N的过程中，因子2的数目一定要比因子5的数目多，所以不管有多少个因子5，都有足够的2与其相乘得到10。所以只要找出1～N所有的数中，一共含有多少个因子5就可以。
+
+#python3.5
+def zeroNum1(num):
+    if num <= 0:
+        return 0
+    res = 0
+    for i in range(5, num+1, 5):
+        cur = i
+        while cur % 5 == 0:
+            res += 1
+            cur //= 5
+    return res
+
+　　普通解法对于每一个数i来说，处理的代价是log5i，一共有O(N)个数。所以时间复杂度是O(N∗log5N)。
+
+　　原问题最优解。首先我们把1～N的数列出来：1,2,3,4,5,6,7,8,9,10…15…20…25…30…35……75…100…125…
+
+　　我们可以发现每隔5个数(5,10,15,20…)都至少含有一个因子5，将这个数列拿出来(5,10,15,20,25,30,35,40,45,50…)，我们又可以发现，每隔5个数(25,50,75…)都至少含有两个因子5。同理，数列(25,50,75,100…)每隔5个数至少含有三个因子5……
+
+　　总结一下就是：1～N个数有N/5个数，这每个数都能贡献一个5；然后1～N中有N/52个数，这每个数又能贡献一个5……
+
+　　因此，如果把N!的结果中因子5的总个数记为Z，可以得到如下关系：Z = N/5+N/52+N/53...+N/5i(i一直增长，直到5i>N)。
+
+　　时间复杂度O(log5N)。
+
+def zeroNum2(num):
+    if num <= 0:
+        return 0
+    res = 0
+    while num != 0:
+        res += num // 5
+        num //= 5
+    return res
+
+　　进阶问题。 
+　　解法一。与原问题相似，最低位的1在哪个位置上，完全取决于1～N的数中因子2有多少个，因为只要一出现一个因子2，最低位就会向左移动一位。过程与原问题的最优解法一样。
+
+def rightOne1(num):
+    if num < 1:
+        return -1
+    res = 0
+    while num != 0:
+        num >>= 1
+        res += num
+    return res
+
+　　解法二。如果把N!的结果中因子2的总个数记为Z，把N的二进制数表达式中1的个数记为m，还存在如下一个关系Z = N - m，也就是可以证明N/2 + N/4 + N/8+… = N-m。（这里的/指的是整除）。 
+　　 
+　　首先，如果一个整数K正好是2的某次方，那么 K/2 + K/4 + K/8+… = K/2 + K/4 + K/8+…+1。根据等比数列求和公式 S=a1−anq1−q，可以得到 K/2 + K/4 + K/8+… = K-1。
+
+　　如果在N的二进制表达中有m个1，那么N可以表达为：N = K1 + K2 + K3 + …+ Km，其中所有的K都等于2的某次方，例如，N = 10110时，N = 10000+100+10(这里的数都是二进制数)。于是有 
+　　 N/2 + N/4 +… = (K1 + K2 + K3 + …+ Km)/2 + (K1 + K2 + K3 + …+ Km)/4 +… = K1/2 + k1/4 + …+ 1 + K2/2 + k2/4 + …+ 1……
+
+　　K1,K2,K3…Km都是2的某次方。所以等式右边 = K1-1 + K2-1 + K3-1 +…+Km-1 = (K1 + K2 + K3…) - m = N-m。至此，Z = N - m证明完毕。
+
+#python3.5
+def rightOne2(num):
+    if num < 1:
+        return -1
+    res = 0
+    tmp = num
+    while tmp != 0:
+        if tmp & 1 != 0:
+            res += 1
+        tmp >>= 1
+    return num - res
+
+其他题目---判断一个点是否在矩形内部
+2017年10月17日 10:42:03
+阅读数：363
+【题目】
+
+　　在二维坐标系中，所有的值都是double型，那么一个矩形可以由四个点来代表，(x1, y1)为最左的点，(x2, y2)为最上的点，(x3, y3)为最下的点，(x4, y4)为最右的点。给定4个点代表的矩形，再给定一个点(x, y)，判断(x, y)是否在矩形中。
+
+【基本思路】
+
+　　首先解决矩形的各条边和坐标轴平行的情况，解决该问题只需要判断点(x, y)是否越界即可。
+
+def isInside(x1, y1, x4, y4, x, y):
+        if x <= x1 or x >= x4 or y <= y4 or y >= y1:
+            return False
+        return True
+
+　　如果矩形的边不平行于坐标轴，那么就通过坐标转换把矩阵转成平行的情况，之后再用上述的方法进行判断即可。
+
+　　所以，最关键的问题就是如何进行坐标转换，将矩阵旋转成平行状态。下面给出一张坐标转换图解，可以很简单的推导出坐标系转换变换公式：x′=x∗cosθ+y∗sinθ，y′=y∗cosθ−x∗sinθ 
+这里写图片描述
+
+【代码实现】
+
+#python3.5
+def isInside(x1, y1, x2, y2, x3, y3, x4, y4, x, y):
+    def isInside(x1, y1, x4, y4, x, y):
+        if x <= x1 or x >= x4 or y <= y4 or y >= y1:
+            return False
+        return True
+
+    if y1 == y2:
+        return isInside(x1, y1, x4, y4, x, y)
+    a = abs(y4 - y3)
+    b = abs(x4 - x3)
+    c = math.sqrt(a*a + b*b)
+    sin = a / c
+    cos = b / c
+    x1R = x1*cos + y1*sin
+    y1R = y1*cos - x1*sin
+    x4R = x4*cos + y4*sin
+    y4R = y4*cos - x4*sin
+    xR = x*cos + y*sin
+    yR = y*cos - x*sin
+    return isInside(x1R, y1R, x4R, y4R, xR, yR)
+
+
+其他题目---判断一个点是否在三角形内部
+2017年10月17日 11:59:27
+阅读数：180
+【题目】
+
+　　在二维坐标系中，所有的值都是double型，那么一个三角形可以由三个点来代表，给定三个点代表的三角形，再给定一个点(x, y)，判断(x, y)是否在三角形中。
+
+【基本思路】
+
+　　方法一。 
+　　等面积法。如果一个点在三角形内部，那么以该点为顶的三个小三角形的面积和应该等于大三角形的面积。如果这个点在三角形的外部，那么三个小三角形的面积和要大于大三角形的面积。知道三个点，如何求该三个点为顶点的三角形的面积？使用海伦公式：S=p∗(p−a)∗(p−b)∗(p−c)−−−−−−−−−−−−−−−−−−−−−−√，其中，a，b，c表示三个边长，p表示半周长，即p=a+b+c2。实现代码参见isInside1。
+
+　　虽然该方法的逻辑是正确的，但是并不推荐使用该方法。因为double类型的值在计算时会出现一定程度的偏差。所以经常会出现一个点明明在三角形内部，面积却对不准的情况，最终导致判断出错。方法二则没有此顾虑。
+
+　　方法二。 
+　　如果一个点O在三角形的内部，那么从三角形的一个点出发，逆时针走过所有边的过程中，点O始终在走过边的左边。如果点O在外侧，则不满足这一条件。
+
+　　如果要逆时针走过一遍三角形，那么三个点的位置是重要的，假设输入的三个点依次是a，b，c，如果b在边ac的左边，按照a -> b -> c的顺序遍历是顺时针遍历，如果b在边ac的右边，按照a -> b -> c的顺序遍历就是逆时针遍历。如果出现前者情况，我们需要先调整一下三个点输入的顺序。
+
+　　接下来的重点就是判断一个点是在一条边的左侧还是右侧。该问题可以使用几何上的向量积（叉积）解决。
+
+　　设线段端点为从A(x1, y1)到B(x2, y2)，线外一点p(x, y)。 
+　　a⃗ =(x2−x1,y2−y1) 
+　　b⃗ =(x−x1,y−y1) 
+　　a⃗ ×b⃗ =|a⃗ ||b⃗ |sinθ 
+　　a⃗ ×b⃗ 决定p的位置，如果a⃗ ×b⃗ 大于0，p在线段左侧；小于0，在右侧；等于0，共线。所以有如下结论： 
+　　　　　　xa∗yb−xb∗ya>0 　　p在左侧 
+　　　　　　xa∗yb−xb∗ya<0 　　p在右侧 
+　　　　　　xa∗yb−xb∗ya=0 　　共线 
+　　一个简单的确定满足“右手定则”的结果向量的方向的方法是这样的：若坐标系是满足右手定则的，当右手的四指从a以不超过180度的转角转向b时，竖起的大拇指指向是c的方向。
+
+　　实现代码参见isInside2。
+
+【代码实现】
+
+#python3.5
+def isInside1(x1, y1, x2, y2, x3, y3, x, y):
+    def getSideLength(x1, y1, x2, y2):
+        a = abs(x2 - x1)
+        b = abs(y2 - y1)
+        return math.sqrt(a*a + b*b)
+
+    def getArea(x1, y1, x2, y2, x3, y3):
+        a = getSideLength(x1, y1, x2, y2)
+        b = getSideLength(x1, y1, x3, y3)
+        c = getSideLength(x2, y2, x3, y3)
+        p = (a + b + c) / 2
+        return math.sqrt(p * (p-a) * (p-b) * (p-c))
+
+    area1 = getArea(x1, y1, x2, y2, x, y)
+    print(area1)
+    area2 = getArea(x1, y1, x3, y3, x, y)
+    print(area2)
+    area3 = getArea(x2, y2, x3, y3, x, y)
+    print(area3)
+    allArea = getArea(x1, y1, x2, y2, x3, y3)
+    print(allArea)
+    return (area1 + area2 + area3) <= allArea
+
+
+def isInside2(x1, y1, x2, y2, x3, y3, x, y):
+    def crossProduct(x1, y1, x2, y2):
+        return x1 * y2 - x2 * y1
+
+    if crossProduct(x3-x1, y3-y1, x2-x1, y2-y1) >= 0:
+        x2, x3 = x3, x2
+        y2, y3 = y3, y2
+    if crossProduct(x2-x1, y2-y1, x-x1, y-y1) < 0:
+        return False
+    if crossProduct(x3-x2, y3-y2, x-x2, y-y2) < 0:
+        return False
+    if crossProduct(x1-x3, y1-y3, x-x3, y-y3) < 0:
+        return False
+    return True
+
+
+其他题目---折纸问题
+2017年10月18日 08:15:41
+阅读数：107
+【题目】
+
+　　把一段纸条竖着放在桌子上，然后从纸条的下边向上方对折一次，压出折痕后展开。此时折痕是凹下去的，即折痕突起的地方指向纸条的背面。如果从纸条的下边向上方连续对折2次，压出折痕后展开，此时有三条折痕，从上到下依次是下折痕、下折痕和上折痕。给定一个输入参数N，代表纸条都从下边向上方连续对折N次，请从上到下打印所有折痕的方向。　　 
+　　例如： 
+　　N = 1时，打印： 
+　　Down 
+　　N = 2时，打印： 
+　　Down 　Down　 Up
+
+【基本思路】 
+　 
+　　对折第1次产生的折痕：　　　　　　　　下 
+　　对折第2次产生的折痕：　　　　下　　　　　　　上 
+　　对折第3次产生的折痕：　　下　　　上　　　下　　　上 
+　　对折第4次产生的折痕：　下　上　下　上　下　上　下　上
+
+　　这就是一棵满二叉树，每个节点的左孩子都是“Down”，右孩子是“Up”，按照中序遍历打印即可。
+
+【代码实现】
+
+#python3.5
+def printAllFolds(N):
+    def printProcess(i, N, isDown):
+        if i > N:
+            return
+        printProcess(i+1, N, True)
+        print("Down" if isDown else "Up", end=' ')
+        printProcess(i+1, N, False)
+
+    printProcess(1, N, True)
+
+
+其他题目---蓄水池算法
+2017年10月18日 09:27:36
+阅读数：118
+【题目】
+
+　　有一个机器按自然数顺序的方式吐出球（1号球、2号、3号…），你有一个袋子，袋子最多只能装下K个球，并且除此之外你没有更多的空间。设计一种选择方式，使得当机器吐出第N号球的时候（N > K），你袋子中球的个数是K个，同时保证从1号球到N号球中的每一个，被选进袋子的概率是K/N。
+
+【基本思路】
+
+　　这道题的核心解法就是蓄水池算法。过程如下： 
+　　1、将第1～k个球直接放入袋子 
+　　2、处理第i号球时(i > k)，以k/i的概率决定是否将第i号球放入袋子中。如果不决定放入袋子，直接扔掉第i号球；否则，在袋子中随机选择一个扔掉，然后放入第i号球 
+　　3、重复步骤2直到 i == N
+
+　　证明：
+
+　　对于第i号球进袋子的分析分两部分：
+
+　　1、当1≤i≤k时，那么在选第k+1号球时，第i号球留在袋子中的概率是1。
+
+　　在选第k+1号球的时候，只有决定第k+1号球入袋，并且第i号球正好被随机选中的时候，第i号球才会被淘汰。所以第i号球被淘汰的概率是p=kk+1∗1k，所以第i号球留下来的概率就是1−p=kk+1。那么从第1号球到第K+1号球的过程中，第i号球最终留下来的概率是kk+1
+　　同理，在选第k+2号球的时候，第i号球被淘汰的概率是p=kk+2∗1k，所以第i号球留下来的概率就是1−p=k+1k+2。那么从第1号球到第K+2号球的过程中，第i号球最终留下来的概率是kk+1∗k+1k+2。
+
+　　依次类推，在选第N号球的时候，从第1号球到第N号球的过程中，第i号球最终留下来的概率是kk+1∗k+1k+2∗...N−1N=kN。
+
+　　2、当k<i时，那么在选第i号球时，第i号球留在袋子中的概率是k/i。
+
+　　在选第i+1号球的时候，只有决定第i+1号球入袋，并且第i号球正好被随机选中的时候，第i号球才会被淘汰。所以第i号球被淘汰的概率是p=ki+1∗1k=1i+1，所以第i号球留下来的概率就是1−p=ii+1。那么从第i号球被选中到第i+1号球的过程中，第i号球最终留下来的概率是ki∗ii+1
+　　同理，在选第i+2号球的时候，第i号球被淘汰的概率是p=ki+2∗1k，所以第i号球留下来的概率就是1−p=i+1i+2。那么从第i号球到第i+2号球的过程中，第i号球最终留下来的概率是ki∗ii+1∗i+1i+2。
+
+　　依次类推，在选第N号球的时候，从第i号球到第N号球的过程中，第i号球最终留下来的概率是ki∗ii+1∗...N−1N=kN。
+
+　　所以，按照该方法，当吐出球数为Ｎ时，每一个球被选进袋子的概率都是K/N。
+
+【代码实现】
+
+#python3.5
+def getKNumRand(k, max):
+    def rand(max):
+        return int(random.random() * max) + 1
+
+    if k < 1 or max < 1:
+        return None
+    res = []
+    for i in range(k):
+        res.append(i+1)
+    for i in range(k+1, max+1):
+        if rand(i) <= k:
+            res[rand(k)-1] = i
+    return res
+
+
+其他题目---设计有setAll功能的哈希表
+2017年10月18日 16:55:39
+阅读数：230
+【题目】
+
+　　哈希表常见的三个操作是put、get和containsKey，而且这三个操作的时间复杂度为O(1)。现在想加一个setAll功能，就是把所有的记录的value值都设成统一的值。请设计并实现这种有setAll功能的哈希表，并且put、get、containsKey和setAll四个操作的时间复杂度都为O(1)。
+
+【基本思路】
+
+　　加入时间戳。
+
+　　1、把每一个记录都加上一个时间，标记每条记录是合适建立的
+
+　　2、设置一个setAll记录也加上一个时间，标记setAll记录何时建立
+
+　　3、查询记录时，如果某条记录的时间早于setAll记录的时间，说明setAll是最新数据，返回setAll记录的值。如果某条记录的时间晚于setAll记录的时间，说明记录的值是最新数据，返回该条记录的值
+
+【代码实现】
+
+#python3.5
+class MyValue:
+    def __init__(self, value, time):
+        self.__value = value
+        self.__time = time
+
+    def getValue(self):
+        return self.__value
+
+    def getTime(self):
+        return self.__time
+
+
+class MyHashMap:
+    def __init__(self):
+        self.map = {}
+        self.time = 0
+        self.setAll = MyValue(None, -1)
+
+    def containsKey(self, key):
+        return key in self.map
+
+    def put(self, key, value):
+        self.map[key] = MyValue(value, self.time)
+        self.time += 1
+
+    def setAll_(self, value):
+        self.setAll = MyValue(value, self.time)
+        self.time += 1
+
+    def get(self, key):
+        if self.containsKey(key):
+            if self.map[key].getTime() < self.setAll.getTime():
+                return self.setAll.getValue()
+            else:
+                return self.map[key].getValue()
+        else:
+            return None
+
+
+其他题目---最大的leftMax与rightMax之差的绝对值
+2017年10月18日 17:34:27
+阅读数：86
+【题目】
+
+　　给定一个长度为N(N>1)的整型数组arr，可以划分成左右两个部分，左部分为arr[0…k]，右部分为arr[k+1…N]，k可以取值的范围是[0…N-2]。求这么多划分方案中，左部分中的最大值减去右部分的最大值的绝对值中，最大是多少？
+
+【基本思路】
+
+　　方法一。 
+　　时间复杂度O(N2)，空间复杂度O(1)。这是最笨的方法，从左到右遍历一次，对每一个位置都遍历一遍它的左边和右边。
+
+#python3.5
+def maxABS1(arr):
+    res = 0
+    for i in range(len(arr)-1):   #重要
+        leftMax = -sys.maxsize
+        for j in range(i+1):
+            leftMax = max(arr[j], leftMax)
+        rightMax = -sys.maxsize
+        for k in range(i+1, len(arr)):
+            rightMax = max(arr[k], rightMax)
+        res = max(abs(rightMax-leftMax), res)
+    return res
+
+　　方法二。 
+　　时间复杂度O(N)，空间复杂度O(N)。使用两个辅助数组lHelp、rHelp。lHelp[i]表示arr[0…i]的最大值；rHelp[i]表示arr[i…N-1]的最大值。得到两个数组对位相减就是每一个位置左部分中的最大值减去右部分的最大值的绝对值。
+
+def maxABS2(arr):
+    res = 0
+    lHelp = []
+    rHelp = []
+    lHelp.append(arr[0])
+    rHelp.append(arr[-1])
+    for i in range(1, len(arr)):
+        lHelp.append(arr[i] if arr[i] > lHelp[-1] else lHelp[-1])
+    for i in range(len(arr)-2, -1, -1):
+        rHelp.append(arr[i] if arr[i] > rHelp[-1] else rHelp[-1])
+    rHelp = rHelp[::-1]
+    for i in range(len(arr)):
+        res = max(abs(lHelp[i] - rHelp[i]), res)
+    return res
+
+　　方法三。 
+　　时间复杂度O(N)，空间复杂度O(1)。遍历一遍数组得到数组的最大值max，不管怎么分，max一定是左部分或者右部分最大的值。接下来只需要让另一个部分的最大值尽可能小就行，如何让另一个部分的最大值尽可能小？当只包含一个元素的时候就是尽量小的时候。
+
+def maxABS3(arr):
+    maxNum = arr[0]
+    for i in range(1, len(arr)):
+        maxNum = max(arr[i], maxNum)
+    return max(abs(maxNum - arr[0]), abs(maxNum - arr[-1]))
+
+
+
+其他题目---设计可以变更的缓存结构
+2017年10月19日 16:45:59
+阅读数：102
+【题目】
+
+　　设计一种缓存结构，该结构在构造时确定大小，假设大小为K，并有两个功能：
+
+set(key, value)：将记录(key, value)插入该结构
+get(key)：返回key对应的value值
+【要求】
+
+set和get的时间复杂度为O(1)
+某个key的set或get操作一旦发生，认为这个key的记录成了最经常使用的
+当缓存的大小超过K时，移除最不经常使用的记录，即set或get最久远的
+【基本思路】
+
+　　这种缓存结构可以由双端队列与哈希表结合的方式实现。首先实现一个基本的双向链表节点结构，如下：
+
+#python3.5
+class Node:
+    def __init__(self, value):
+        self.value = value
+        self.pre = None
+        self.next = None
+
+　　根据双向链表节点结构Node，实现一种双向链表结构DoubleLinkedList，在该结构中优先级最低的是头节点head，优先级最高的是尾节点Tail。这个结构有以下三种操作：
+
+addNode。加入一个节点，并将该节点设置成链表的尾部
+moveNodeToTail。对链表中的任意一个节点，可以分离出来并放到整个链表的尾部。
+removeHead。移除链表的头节点，并将head设置为head.next。
+具体实现如下：
+
+class DoubleLinkedList:
+    def __init__(self):
+        self.head = None
+        self.tail = None
+
+    def addNode(self, newNode):
+        if newNode == None:
+            return
+        if self.head == None:
+            self.head = newNode
+            self.tail = newNode
+        else:
+            self.tail.next = newNode
+            newNode.pre = self.tail
+            self.tail = newNode
+
+    def moveNodeToTail(self, node):
+        if node == None:
+            return
+        if node == self.tail:
+            return
+        if node == self.head:
+            self.head = node.next
+            self.head.pre = None
+        else:
+            node.pre.next = node.next
+            node.next.pre = node.pre
+        self.tail.next = node
+        node.next = None
+        node.pre = self.tail
+        self.tail = node
+
+    def removeHead(self):
+        if self.head == None:
+            return None
+        res = self.head
+        if self.head == self.tail:
+            self.head == None
+            self.tail == None
+        else:
+            self.head = res.next
+            self.head.pre = None
+            res.next = None
+        return res
+
+　　最后实现最终的缓冲结构。如何把记录之间按照“访问经常度”来排序，就是上文提到的DoubleLinkedList结构。一旦有新的记录，直接放到链表的尾部。一旦获得(get)或设置(set)一个记录，就直接将该key对应的node调整到链表尾部。cache一旦满了，就删除链表的头节点所表示的记录。 
+　　为了得到key -> node以及node -> key的关系，使用两个哈希表来建立两者之间的映射关系。
+
+【代码实现】
+
+#python3.5
+class Node:
+    def __init__(self, value):
+        self.value = value
+        self.pre = None
+        self.next = None
+
+class DoubleLinkedList:
+    def __init__(self):
+        self.head = None
+        self.tail = None
+
+    def addNode(self, newNode):
+        if newNode == None:
+            return
+        if self.head == None:
+            self.head = newNode
+            self.tail = newNode
+        else:
+            self.tail.next = newNode
+            newNode.pre = self.tail
+            self.tail = newNode
+
+    def moveNodeToTail(self, node):
+        if node == None:
+            return
+        if node == self.tail:
+            return
+        if node == self.head:
+            self.head = node.next
+            self.head.pre = None
+        else:
+            node.pre.next = node.next
+            node.next.pre = node.pre
+        self.tail.next = node
+        node.next = None
+        node.pre = self.tail
+        self.tail = node
+
+    def removeHead(self):
+        if self.head == None:
+            return None
+        res = self.head
+        if self.head == self.tail:
+            self.head == None
+            self.tail == None
+        else:
+            self.head = res.next
+            self.head.pre = None
+            res.next = None
+        return res
+
+
+class MyCache:
+    def __init__(self, capacity):
+        self.nodeKeyMap = {}
+        self.keyNodeMap = {}
+        self.capacity = capacity
+        self.nodeList = DoubleLinkedList()
+
+    def get(self, key):
+        if key in self.keyNodeMap:
+            res = self.keyNodeMap[key]
+            self.nodeList.moveNodeToTail(res)
+            return res.value
+        return None
+
+    def set(self, key, value):
+        if key in self.keyNodeMap:
+            node = self.keyNodeMap[key]
+            node.value = value
+            self.nodeList.moveNodeToTail(node)
+        else:
+            node = Node(value)
+            self.keyNodeMap[key] = node
+            self.nodeKeyMap[node] = key
+            self.nodeList.addNode(node)
+            if len(self.keyNodeMap) == self.capacity + 1:
+                self.removeMostUnusedCache()
+
+    def removeMostUnusedCache(self):
+        node = self.nodeList.removeHead()
+        key = self.nodeKeyMap[node]
+        del self.keyNodeMap[key]
+        del self.nodeKeyMap[node]
+
+
+其他题目---设计RandomPool结构
+2017年10月19日 17:31:50
+阅读数：132
+【题目】
+
+　　设计一种结构，在该结构中有如下三个功能：
+
+　　 1、 insert(key)：将某个key加入到该结构，做到不重复加入 
+　　 2、delete(key)：将原本在结构中的某个key移除 
+　　 3、getRandom()：等概率随机返回结构中的任意一个key
+
+　　要求所有的操作时间复杂度都是O(1)。
+
+【基本思路】
+
+　　对每个元素都加上一个下标，第一个元素的下标为0，每加入一个元素，对应的下标加1。如果要删除一个元素，假设该元素的下标为i，将最后的一个元素放到位置i处，同时删除最后一个元素（对应的下标也删除）。这样处理就保证了下标的连续性，在进行getRandom操作的时候，只需要随机产生一个下标，将该下标位置处的元素返回即可。 
+　　 
+　　为了得到key -> index以及index -> key的对应关系，使用两个哈希表来建立两者之间的映射。
+
+【代码实现】
+
+#python3.5
+class Pool:
+    def __init__(self):
+        self.keyIndexMap = {}
+        self.indexKeyMap = {}
+        self.index = 0
+
+    def insert(self, key):
+        self.keyIndexMap[key] = self.index
+        self.indexKeyMap[self.index] = key
+        self.index += 1
+
+    def delete(self, key):
+        if key in self.keyIndexMap:
+            index = self.keyIndexMap[key]
+            lastKey = self.indexKeyMap[self.index-1]
+            self.indexKeyMap[index] = lastKey
+            del self.keyIndexMap[lastKey]
+            del self.indexKeyMap[self.index-1]
+            self.index -= 1
+
+    def getRandom(self):
+        if self.index == 0:
+            return None
+        index = int(random.random() * self.index)
+        return self.indexKeyMap[index]
+
+
+其他题目---调整[0,x)区间上的数出现的概率
+2017年10月25日 08:43:28
+阅读数：91
+【题目】
+
+　　假设函数random()等概率随机返回一个在[0, 1)范围上的数，那么我们知道，在[0, x)区间上的数出现的概率为x(0<x≤1)。给定一个大于0的整数k，并且可以使用random()函数，请实现一个函数依然返回[0,1)范围上的数，但是在[0, x)区间上的数出现的概率为xk(0<x≤1)。
+
+【基本思路】
+
+　　调用k次random()函数，返回最大的那个数即可。如果想要返回在[0, 1)区间上的数，k次调用random()的返回值都必须落在[0, x)区间上，否则会返回大于x的数，所以概率为xk。
+
+【代码实现】
+
+#python3.5
+def randXPowerK(k):
+    if k < 1:
+        return 0
+    res = -1
+    for i in range(k):
+        res = max(res, random.random())
+    return res
+
+
+其他题目---路径数组变为统计数组
+2017年10月25日 10:32:00
+阅读数：79
+【题目】
+
+　　给定一个路径数组paths，表示一张图。paths[i] == j代表城市i连向城市j，如果paths[i] == i，则表示城市i是首都，一张图里只会有一个首都且图中除首都指向自己之外不会有环。 
+　　例如：paths={9,1,4,9,0,4,8,9,0,1} 由这个数组表示的图如下图所示。 
+这里写图片描述 
+　　城市1是首都所以距离为0；离首都距离为1的城市只有城市9；离首都距离为2的城市有城市0，3，7；离首都距离为3的城市有城市4，8；离首都距离为4的城市有城市2，5，6； 所以，距离为0的城市有1座；距离为1的城市有1座；距离为2的城市有3座；距离为3的城市有2座；距离为4的城市有3座；那么统计数组为numArr={1,1,3,2,3,0,0,0,0,0}，numArr[i]==j代表距离为i的城市有j座； 要求实现一个void类型的函数，输入一个路径数组paths，直接在原数组上调整，使之变为numArr数组。 paths={9,1,4,9,0,4,8,9,0,1}，函数处理后，paths={1,1,3,2,3,0,0,0,0,0}。
+
+【要去】
+
+　　如果paths长度为N，时间复杂度为O(N)，额外空间复杂度为O(1)。
+
+【基本思路】
+
+　　分两部分来处理。第一步先将paths数组转换为距离数组，即数组中每一个位置的值表示的是该城市到首都的距离。第二步，根据距离数组计算得到统计数组。
+
+　　如何得到距离数组呢？根据paths数组，我们可以得到每一个城市连向的城市，我们可以采用跳跃的方式，从一个城市一直往下一个城市跳，直到跳到首都位置，跳的次数就是该城市到首都的距离。下面以题目的例子来说明这一过程的实现：
+
+　　1、从左到右遍历paths，先遍历到位置0。 
+　　paths[0] == 9，首先令paths[0] == -1(这是为了标记起跳的城市)，因为城市0指向城市9，所以跳到城市9. 
+　　跳到城市9之后，paths[9] == 1，说明下一个城市是1，因为城市9是由城市0跳过来的，所以先令paths[9] = 0，然后跳向城市1。 
+　　跳到城市1之后，paths[1] == 1，说明城市1是首都。现在开始往回跳，城市1是由城市9跳过来的，所以跳回城市9。 
+　　根据之前设置的paths[9] == 0，我们知道城市9是由城市0跳过来的，在回跳之前先设置paths[9] = -1，表示城市9到首都的距离为1，之后回跳到0。 
+　　根据之前的设置paths[0] == -1，我们知道城市0是起跳位置，所以不再回跳，令paths[0] == -2，表示到首都的距离为2。 
+　　以上在跳向首都的过程中，paths数组有一个路径反指的过程，这是为了保证找到首都之后，能够完全跳回来。在跳回来的过程中，设置好这一路所跳的城市即可。
+
+　　2、对于其他位置，跳跃的过程同上，但是跳跃终止的条件可以不是跳到首都，当我们跳到下一个位置发现它的值是负数，说明这个位置已经计算出了到首都的距离，我们只要在这个基础上来设置距离即可。
+
+　　3、首都我们单独处理即可，找到首都的位置然后将它的值设为0，表示距离为0。
+
+　　得到距离数组后，数组中的距离值都用负数表示。接下来我们根据距离数组来计算得到统计数组。该过程也是一个跳跃的过程。从左到右遍历数组，假设遍历到为i，paths[i] == -j，那么我们可以知道城市i距离首都的距离是j，先令paths[i] == 0，表示此位置不再代表距离，然后跳到位置j处，如果位置j处的值为负数-k，我们令paths[j] = 1，表示我们已经找到一个距离为j的城市(城市i)。然后根据k继续往下跳。如果位置j处的值为正数，说明该位置已经是距离为j的城市的数量统计，直接加1即可。
+
+　　paths数组转成距离数组的过程中，每一个城市只经历跳出去和跳回来两个过程；距离数组转成统计数组，每一个城市只经历跳出的过程，所以整个时间复杂度是O(N)。
+
+【代码实现】
+
+#python3.5
+def pathsToNums(paths):
+    def pathsToDistance(paths):
+        cap = -1
+        for i in range(len(paths)):
+            if paths[i] == i:
+                cap = i
+            elif paths[i] > -1:
+                curI = paths[i]
+                preI = i
+                paths[i] = -1
+                while paths[curI] != curI:
+                    if paths[curI] > -1:
+                        next = paths[curI]
+                        paths[curI] = preI
+                        preI = curI
+                        curI = next
+                    else:
+                        break
+                value = 0 if paths[curI] == curI else paths[curI]
+                while paths[preI] != -1:
+                    index = paths[preI]
+                    paths[preI] = value - 1 
+                    value -= 1
+                    preI = index
+                paths[preI] = value - 1
+        paths[cap] = 0
+
+
+    def distanceToNums(disArr):
+        for i in range(len(disArr)):
+            index = disArr[i]
+            if index < 0:
+                disArr[i] = 0
+                index = -index
+                while disArr[index] < 0:
+                    tmp = disArr[index]
+                    disArr[index] = 1
+                    index = -tmp
+                disArr[index] += 1
+        disArr[0] = 1
+
+
+    if paths == None or len(paths) == 0:
+        return
+    pathsToDistance(paths)
+    distanceToNums(paths)
+    return paths
+
+
+其他题目---正数数组的最小不可组成和
+2017年10月26日 10:38:40
+阅读数：78
+【题目】
+
+　　给定一个正数数组arr，其中所有的值都是整数，以下是最小不可组成和的概念：
+
+把arr每个子集内的所有元素加起来会出现很多值，其中最小的记为min，最大的记为max。
+在区间[min, max]上，如果有数不可以被arr某一个子集相加得到，那么其中最小的那个数就是arr的最小不可组成和。
+在区间[min, max]上，如果所有的数都可以被arr的某一个子集相加得到，那么max + 1是arr的最小不可组成和。
+【进阶题目】
+
+　　如果已知正数数组arr中肯定有1这个数，是否能更快地得到最小不可组成和？
+
+【基本思路】
+
+　　原问题。 
+　　解法一。使用暴力递归的方式，收集每一个子集的累加和，记录在一个哈希表中，然后从min开始递增检查，看第一个不在哈希表中的正数是哪一个，时间复杂度是O(2N)。
+
+#python3.5
+def unformedSum1(arr):
+    def process(arr, i, sum, set1):
+        if i == len(arr):
+            set1.add(sum)
+            return
+        process(arr, i+1, sum, set1)
+        process(arr, i+1, sum + arr[i], set1)
+
+    if arr == None or len(arr) == 0:
+        return 1
+    set1 = set()
+    process(arr, 0, 0, set1)
+    min1 = sys.maxsize
+    for i in range(len(arr)):
+        min1 = min(arr[i], min1)
+    for i in range(min1+1, sys.maxsize):
+        if i not in set1:
+            return i
+    return 0
+
+　　解法二。使用动态规划。arr中所有数的相加和sum即是该数组的最大累加和，所有arr子集的累加和必然在[0, sum]区间上。生成长度为sum+1的dp数组，dp[i] == True表示i这个累加和可以被arr的子集相加得到，否则不能。如果arr[0…i]这个范围上的数组成的子集可以累加出k，那么arr[0…i+1]这个范围上的数组成的子集中必然可以累加出k + arr[i+1]。时间复杂度O(N*sum)，空间复杂度O(sum)
+
+def unformedSum2(arr):
+    if arr == None or len(arr) == 0:
+        return 1
+    maxSum = 0
+    minSum = sys.maxsize
+    for i in range(len(arr)):
+        minSum = min(arr[i], minSum)
+        maxSum += arr[i]
+    dp = [False for i in range(maxSum+1)]
+    dp[0] = True
+    for i in range(len(arr)):
+        for j in range(maxSum,arr[i]-1, -1):
+            if dp[j-arr[i]]:
+                dp[j] = True
+    for i in range(minSum, len(dp)):
+        if not dp[i]:
+            return i
+    return maxSum + 1 
+
+　　进阶题目。 
+　　时间复杂度O(NlogN)，空间复杂度O(1)，具体过程如下：
+
+将arr进行排序，排序后必然有arr[0] == 1。
+从左往右计算每个位置i的range。range表示当计算到位置arr[i]时，[1, range]上所有的数都可以被arr[0…i-1]的某一个子集累加出来。初始时range = 0。
+如果arr[i] > range+1。说明在arr[0…i]上，range+1这个数一定不能累加出来。此时返回range + 1即可。如果arr[i]≤range+1，说明[1,range+arr[i]]区间上所有的正数都可以被arr[0…i]上的某一个子集累加出来，所以令range += arr[i]，然后继续计算下一个位置。
+#python3.5
+def unformedSum3(arr):
+    if arr == None or len(arr) == 0:
+        return 1
+    arr.sort()
+    rang = 0
+    for i in range(len(arr)):
+        if arr[i] <= rang+1:
+            rang += arr[i]
+        else:
+            break
+    return rang + 1
+
+
+其他题目---一种字符串和数字的对应关系
+2017年10月26日 15:44:18
+阅读数：163
+【题目】
+
+　　一个char类型的数组chs，其中所有的字符都不同。 
+　　例如，chs = [‘A’, ‘B’, ‘C’, … ‘Z’]，则字符串与整数的对应关系如下： 
+　　A,B,C…Z,AA,AB…AZ,BA,BB…ZZ,AAA…ZZZ,AAAA… 
+　　1,2,3…26,27,28…52,53,54…702,703…18278,18279 
+　　例如，chs = [‘A,’ ‘B’, ‘C’]，则字符串与整数的对应关系如下： 
+　　A,B,C,AA,AB…CC,AAA…CCC,AAAA… 
+　　1,2,3, 4,　5 … 12, 14　…39,40 
+　　给定一个数组chs，实现根据对应关系完成字符串与整数相互转换的两个函数。
+
+【基本思路】
+
+　　这道题类似于10进制数与k进制数相互转换，不同的是，这次的k进制数每一位上不能取0，取值的范围是[1, k]，我们把它叫做k伪进制数。 
+　　从数字到字符串。以chs = [‘A’, ‘B’, ‘C’]，n = 72为例子描述该过程：
+
+chs的长度为3，所以这是一个3伪进制，从低位到高位依次为1,3,9,27,81…
+
+从1开始减，72减1剩余71;71减3剩余68;68减9剩余59;59减27剩余32;32减81，不够减。此时就知道想要表达十进制数的72，只需要使用3伪进制的前4位，也就是27,9,3,1。换句话说，既然k伪进制中每个位上的值都不能等于0，就从低位到高位把每个位置的都值都先减去1，看这个数到底需要前几位。
+
+步骤2剩余的数是32，同时前四位的值各用了一遍。接下来看32最多可以用几个27，最多用1个，加上之前使用的一个，一个要用两个27，所以该位置上应该填 ‘B’。32%27的结果是5，然后看5能用几个9，一个也用不了，所以该位置应该填 ‘A’。再看5能用几个3，能用一个，所以该位置填 ‘B’。5%3的结果是2，再看2能用几个1，能用两个，所以该位置应该填 ‘C’。所以结果是 “BABC”
+
+总结一下，就是先从低位到高位看一个数N最多能用几个k伪进制数的位，时间复杂度是logkN。然后从高位到低位反着回去看每个位上的值最多是多少，时间复杂度是logkN，所以总的时间复杂度是logkN。
+
+#python3.5
+def getString(chs, n):
+    if chs == None or len(chs) == 0 or n < 1:
+        return ""
+    k = len(chs)
+    cur = 1
+    length = 0
+    while n - cur >= 0:
+        n -= cur
+        cur *= k
+        length += 1
+    res = [0 for i in range(length)]
+    for i in range(length):
+        cur //= k
+        nCur = n // cur
+        res[i] = chs[nCur]
+        n %= cur
+    return ''.join(res)
+
+　　从字符串到数字。以chs = [‘A’,’B’,’C’]，str = “ABBA”为例，可以知道这个字符串的含义是27有1个，9有2个，3有2个，1有1个，所以对应的数字是52。
+
+def getNum(chs, str1):
+    def getNthFromChar(chs, ch):
+        for i in range(len(chs)):
+            if chs[i] == ch:
+                return i+1
+        return -1
+
+    if chs == None or len(chs) == 0 or str1 == None or len(str1) == 0:
+        return 0
+    res = 0
+    k = len(chs)
+    for i in range(len(str1)):
+        res = res * k + getNthFromChar(chs, str1[i])
+    return res
+
+
+其他题目---1到n中1出现的次数
+2017年10月27日 12:01:23
+阅读数：91
+【题目】
+
+　　给定一个整数n，返回1到n的数字中1出现的个数。 
+　　例如： 
+　　n = 5，1~n为1,2,3,4,5。那么1出现了1次，所以返回1。 
+　　n = 11，1～n为1,2,3,4,5,6,7,8,9,10,11。1出现了4次，返回4。
+
+【基本思路】
+
+　　方法一。暴力的方式，逐个检查每个数字中1的个数，十进制的整数N有logN位，所以考察一个整数含有多少个1的代价是O(logN)，一共有N个数，所以时间复杂度为O(NlogN)。
+
+#python3.5
+def oneNums1(num):
+    if num < 1:
+        return 0
+    res = 0
+    for i in range(1, num+1):
+        cur = i
+        tmp = 0
+        while cur != 0:
+            if cur % 10 == 1:
+                tmp += 1
+            cur //= 10
+        res += tmp
+    return res
+　　 
+　　方法二。观察所有数字中1出现的规律。以数字12345为例，将12345分成1~2345,2346~12345两段，先看2346～12345这一段。首先看万位1出现的次数，只能是10000~12345，一共2345+1个。接下来看千位1出现的次数，那就是千位固定1不动，其他位自由变化，万位能变化的范围是0～1，但是区间是2346~12345，所以只能表达1w个数，个十百位能变化的范围是0~9，所有总的个数是1*10*10*10；同样百（十）位1出现的次数，那就是百（十）位固定1不动，其他位自由变化，总的个数也是1*10*10*10。因此2346~12345上1出现的次数便可知。接下来1~2345上1出现的次数可以按照上述方法递归求解。
+
+　　这是以1开头的数字的情况，如果不是以1开头，那么最高位1出现的情况就是10000…～19999…
+
+def oneNums2(num):
+    def getLength(num):
+        res = 0
+        while num != 0:
+            res += 1
+            num //= 10
+        return res
+
+    if num < 1:
+        return 0
+    length = getLength(num)
+    base = int(math.pow(10, length-1))
+    first = num // base
+    firstOneNum = num % base + 1 if first == 1 else base
+    otherOneNum = first * (length-1) * (base // 10)
+    return firstOneNum + otherOneNum + oneNums2(num % base)
+
+　　分析代码可知，ｎ共有多少位，递归函数就会被调用多少次，即logN次。每次递归内部的复杂度也是logN，所以总体时间复杂度为O(logN*logN)。
+
+
+
+其他题目---从N个数中等概率打印M个数
+2017年10月30日 14:47:05
+阅读数：153
+【题目】
+
+　　给定一个长度为N且没有重复元素的数组arr和一个整数m，实现函数等概率随机打印arr中的M个数。
+
+【要求】
+
+相同的数不要重复打印
+时间复杂度O(M)，空间复杂度O(1)
+可以改变arr数组
+【基本思路】
+
+　　具体过程如下：
+
+　　1、在arr[0…N-1]中随机得到一个位置a，然后打印arr[a]。 
+　　2、把arr[a]和arr[N-1]交换。 
+　　3、在arr[0…N-2]中随机得到一个位置b，然后打印arr[b]，因为打印过的arr[a]已经被换到了N-1位置，所以这次打印不可能在出现。 
+　　4、把arr[b]和arr[N-2]交换。 
+　　5、在arr[0…N-3]中随机得到一个位置c，然后打印arr[c]，因为打印过的arr[a]和arr[b]已经被换到了N-1位置和N-2位置，所以这次打印不可能在出现。 
+　　6、依次类推直到打印M个数
+
+　　总之，就是把随机选出来的数打印出来，然后将打印的数交换到范围中的最后位置，再把范围缩小，使得被打印的数下次不可能再被选中，直到打印结束。
+
+【代码实现】
+
+#python3.5
+def printRandM(arr, m):
+    if arr == None or len(arr) == 0 or len(arr) < m or m < 1:
+        return
+    res = 0
+    n = len(arr)
+    while res < m:
+        index = int(random.random() * n)
+        print(arr[index], end=' ')
+        arr[index], arr[n-1] = arr[n-1], arr[index]
+        n -= 1
+        res += 1
+
+
+其他题目---判断一个数是否是回文数
+2017年10月30日 14:55:00
+阅读数：141
+【题目】
+
+　　定义回文数的概念如下：
+
+　　1. 如果一个非负数左右完全对应，则该数是回文数，例如：121，22等 
+　　2. 如果一个负数的绝对值左右完全对应，也是回文数，例如：-121，-22等
+
+　　给定一个32位整数num，判断num是否是回文数。
+
+【基本思路】
+
+　　具体过程如下： 
+　　1、假设判断的数字为非负整数n，先生成变量help，开始时help = 1 
+　　2、用help不断地乘以10，直到变得与num的位数一样 
+　　3、那么num/help的结果就是最高位的数字，num%10就是最低位的位置，比较这两个数字，不相同则直接返回False。相同则令num = (num % help) / 10，即num变成除去最高位和最低位两个数字之后的值。令help /= 100，即让help变得继续和新的num的位数一样 
+　　4、如果num == 0，表示所有的数字已经对应判断完毕，返回True，否则重复步骤3
+
+　　上述方法就是让num每次剥掉最左和最右的两个数。需要注意的是，上述方法只适用于非负数，如果n为负数，先把n变成其绝对值，然后用上面的方法进行判断。特别注意，如果n是32位最小值的话，它是转不成相应的绝对值的，并且这个数很明显不是回文数，直接返回False即可。
+
+【代码实现】
+
+#python3.5
+def isPlindrome(num):
+    if num == -(1 << 31):
+        return False
+    num = abs(num)
+    base = 1
+    while base <= num:
+        base *= 10
+    base //= 10
+    while num != 0:
+        if num % 10 != num // base:
+            return False
+        num = num % base // 10
+        base //= 100
+    return True
+
+
+其他题目---在有序旋转数组中找到最小值
+2017年10月30日 22:43:47
+阅读数：94
+【题目】
+
+　　有序数组arr可能经过一次旋转处理，也可能没有，且arr可能存在重复的数。例如，有序数组[1,2,3,4,5,6,7]，可以旋转处理成[4,5,6,7,1,2,3]等。给定一个可能旋转过的有序数组arr，返回arr中的最小值。
+
+【基本思路】
+
+　　尽可能的利用二分查找，但是最坏情况仍然无法避免O(N)的时间复杂度。首先需要知道，如果一个有序数组经过旋转后，最小的值一定是数组中降序的那个位置，其余部分都是升序。同时，数组的第一个元素一定比最后一个元素大。如果没有经过旋转，数组整体都是升序，最小值就是数组的第一个值。
+
+　　所以在利用二分查找的时候，如果arr[left] < arr[right]，说明数组整体升序，直接返回arr[left]。否则，如果arr[left] > arr[mid]，说明降序一定发生在数组左半区，令right = mid；如果arr[mid] > arr[right]，说明降序一定发生在数组右半区，令left = mid。
+
+　　但是有一个很重要的问题，在arr数组中可能存在重复的值，那么就可能发生arr[left] == arr[mid] == arr[right]的情况。这个时候，我们从left位置开始，向右遍历，假设遍历到位置i，如果arr[i] == arr[mid]，继续向右遍历；如果arr[i] > arr[mid]，说明降序一定发生在arr[i…mid]之间，令left = i，right = mid；如果arr[i] < arr[mid]，说明此时出现了降序，直接返回arr[i]即可。如果遍历到mid位置都一直与arr[mid]相等，说明左半区都是一个值，所以降序一定出现在右半区，所以令left = mid。
+
+　　最坏的情况下，所有的值都是一个值。对于每个值都需要遍历一遍，所以最坏的时间复杂度是O(N)。
+
+【代码实现】
+
+#python3.5
+def getMin(arr):
+    if arr == None or len(arr) == 0:
+        return 0
+    left = 0
+    right = len(arr) - 1
+    while left < right:
+        if left == right - 1:
+            break
+        if arr[left] < arr[right]:
+            return arr[left]
+        mid = (left + right) // 2
+        if arr[left] > arr[mid]:
+            right = mid
+        elif arr[mid] > arr[right]:
+            left = mid
+        else:
+            while left != mid:
+                if arr[left] == arr[mid]:
+                    left += 1
+                elif arr[left] > arr[mid]:
+                    right = mid
+                    break
+                else:
+                    return arr[left]
+    return min(arr[left], arr[right])
+
+
+其他题目---在有序旋转数组中找到一个数
+2017年10月31日 09:42:49
+阅读数：122
+【题目】
+
+　　有序数组arr可能经过一次旋转处理，也可能没有，且arr可能存在重复的数。例如，有序数组[1,2,3,4,5,6,7]，可以旋转处理成[4,5,6,7,1,2,3]等。给定一个可能旋转过的有序数组arr，再给定一个数n，返回arr中是否含有n。
+
+【基本思路】
+
+　　尽可能的利用二分查找，但是最坏情况仍然无法避免O(N)的时间复杂度。首先需要知道，如果一个有序数组经过旋转后，只有一个位置会出现降序，其余部分都是升序。同时，数组的第一个元素一定比最后一个元素大。如果没有经过旋转，数组整体都是升序。在有序数组中找一个数可以利用二分法。
+
+　　所以在利用二分查找的时候，在arr[left] != arr[mid]的情况下，如果arr[left] < arr[mid]，说明arr[left…mid]是有序的，如果n大于arr[left]并且小于arr[mid]，说明n在左半区，令right = mid-1；如果n不在arr[left…mid]区间，则一定在右半区，令left = mid+1。
+
+　　同理，在arr[mid] != arr[right]的情况下，如果arr[mid] < arr[right]，说明arr[mid…right]是有序的，如果n大于arr[mid]并且小于arr[right]，说明n在右半区，令left = mid+1；如果n不在arr[mid…right]区间，则一定在左半区，令right = mid-1。
+
+　　通过上面分析我们可以知道，只要arr[left]、arr[mid]、arr[right]不都相同的时候，二分就可以进行。
+
+　　但是有一个很重要的问题，在arr数组中可能存在重复的值，那么就可能发生arr[left] == arr[mid] == arr[right]的情况。这个时候，我们从left位置开始，向右遍历，直到arr[left] != arr[mid]。如果遍历到mid位置都一直与arr[mid]相等，说明左半区都是一个值，所以n一定出现在右半区，所以令left = mid + 1。
+
+　　最坏的情况下，所有的值都是一个值。对于每个值都需要遍历一遍，所以最坏的时间复杂度是O(N)。
+
+【代码实现】
+
+#python3.5
+def isContains(arr, num):
+    if arr == None or len(arr) == 0:
+        return False
+    left = 0
+    right = len(arr) - 1
+    while left <= right:
+        mid = (left + right) // 2
+        if arr[mid] == num:
+            return True
+        if arr[left] == arr[mid] == arr[right]:
+            while left < mid and arr[left] == arr[mid]:
+                left += 1
+            if left == mid:
+                left = mid + 1
+                continue
+        if arr[left] != arr[mid]:
+            if arr[left] < arr[mid]:
+                if num < arr[mid] and num >= arr[left]:
+                    right = mid - 1
+                else:
+                    left = mid + 1
+            else:
+                if num > arr[mid] and num <= arr[right]:
+                    left = mid + 1
+                else:
+                    right = mid - 1
+        else:
+            if arr[mid] < arr[right]:
+                if num > arr[mid] and num <= arr[right]:
+                    left = mid + 1
+                else:
+                    right = mid - 1
+            else:
+                if num >= arr[left] and num < arr[mid]:
+                    right = mid - 1
+                else:
+                    left = mid + 1
+    return False
+
+
+
+其他题目---数字的英文表达和中文表达
+2017年11月01日 11:05:21
+阅读数：236
+【题目】
+
+　　给定一个32位整数n，写两个函数分别返回n的英文与中文表达字符串。
+
+【基本思路】
+
+　　该类型的题目通常是由小的，简单的场景出发，把复杂的事情拆解成简单的场景。
+
+　　英文表达的实现。英文的表达是以三个数为一组的，所以只要能表达出1~999，然后将数字分解成十亿组，百万组，千组，1～999组，每组都用1~999表达再把组与组之间各自的表达字符串连接起来即可。如何实现1~999的表达？从简单场景出发，依次实现1~19，1~99，1~999即可。
+
+　　需要注意的是负数要加一个前缀，n如果为最小负整数的时候要考虑取绝对值时会溢出的问题。
+
+#python3.5
+def num1To19(num):
+    if num < 1 or num > 19:
+        return ""
+    names = ["One","Two","Three","Four","Five","Six","Seven","Eight","Nine",\
+            "Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen",\
+            "Sixteen","Seventeen","Eighteen","Nineteen"]
+    return names[num-1]
+
+def num1To99(num):
+    if num < 1 or num > 99:
+        return ""
+    if num >= 1 and num <= 19:
+        return num1To19(num)
+    high = num // 10
+    tyNames = ["Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"]
+    return tyNames[high-2] + " " + num1To19(num % 10)
+
+def num1To999(num):
+    if num < 1 or num > 999:
+        return ""
+    if num >= 1 and num <= 99:
+        return num1To99(num)
+    return num1To19(num // 100) + " Hundred " + num1To99(num % 100)
+
+def getNumEngExp(num):
+    if num == 0:
+        return "Zero"
+    res = ""
+    if num < 0:
+        res = "Negetive, "
+    if num == -(1 << 31):    #防止取绝对值时溢出
+        res += "Two Billion, "
+        num %= -2000000000
+    num = abs(num)
+    high = 1000000000
+    names = ["Billion","Million","Thousand",""]
+    index = 0
+    while num != 0:
+        cur = num // high
+        num %= high
+        if cur != 0:
+            res += num1To999(cur) + " " + names[index]
+            res += ", " if num != 0 else ""
+        index += 1
+        high //= 1000
+    return res
+
+　　中文表达的实现。与英文表达的处理过程类似，都是由小范围的数向大范围的数扩张。依次实现1~9，1~99，1~999，1~9999，1~99999999。需要注意的细节就是，16的表达为十六，116的表达为一百一十六，1016的表达是一千零一十六，也可以是一千零十六。这说明，对10~19来说，如果百位上有数字，那么就应该念一十几，如果百位没有数字，则应该念十几，所以在设计1~99函数的时候，要多考虑百位是否存在的因素。
+
+def num1To9ByChinese(num):
+    if num < 1 or num > 9:
+        return ""
+    names = ["一","二","三","四","五","六","七","八","九"]
+    return names[num-1]
+
+def num1To99ByChinese(num, hasBai):
+    if num < 1 or num > 99:
+        return ""
+    if num < 10:
+        return num1To9ByChinese(num)
+    shi = num // 10
+    if shi == 1 and not hasBai:
+        return "十" + num1To9ByChinese(num % 10)
+    else:
+        return num1To9ByChinese(shi) + "十" + num1To9ByChinese(num % 10)
+
+def num1To999ByChinese(num):
+    if num < 1 or num > 999:
+        return ""
+    if num < 100:
+        return num1To99ByChinese(num, False)
+    res = num1To9ByChinese(num // 100) + "百"
+    rest = num % 100
+    if rest == 0:
+        return res
+    elif rest >= 10:
+        res += num1To99ByChinese(rest, True)
+    else:
+        res += "零" + num1To9ByChinese(rest)
+    return res
+
+def num1To9999ByChinese(num):
+    if num < 1 or num > 9999:
+        return ""
+    if num < 1000:
+        return num1To999ByChinese(num)
+    res = num1To9ByChinese(num // 1000) + "千"
+    rest = num % 1000
+    if rest == 0:
+        return res
+    elif rest >= 100:
+        res += num1To999ByChinese(rest)
+    else:
+        res += "零" + num1To99ByChinese(rest, False)
+    return res
+
+def num1To99999999ByChinese(num):
+    if num < 1 or num > 99999999:
+        return ""
+    if num < 10000:
+        return num1To9999ByChinese(num)
+    wan = num // 10000
+    rest = num % 10000
+    res = num1To9999ByChinese(wan) + "万"
+    if rest == 0:
+        return res
+    elif rest > 1000:
+        res += num1To9999ByChinese(rest)
+    else:
+        res += "零" + num1To999ByChinese(rest)
+    return res
+
+def getNumChineseExp(num):
+    if num == 0:
+        return "零"
+    res = ""
+    if num < 0:
+        res = "负"
+    num = abs(num)
+    yi = num // 100000000
+    rest = num % 100000000
+    if yi == 0:
+        return res + num1To99999999ByChinese(rest)
+    res += num1To99999999ByChinese(yi) + "亿"
+    if rest == 0:
+        return res
+    elif rest > 10000000:
+        return res + num1To99999999ByChinese(rest)
+    else:
+        return res + "零" + num1To99999999ByChinese(rest)
+
+
+
+其他题目---分糖果问题
+2017年11月02日 18:16:58
+阅读数：104
+【题目】
+
+　　一群孩子做游戏，现在请你根据游戏得分来发糖果，要求如下： 
+　　1、每个孩子不管得分多少，起码分到1个糖果 
+　　2、任意两个相邻的孩子之间，得分较多的孩子必须多拿一些糖果
+
+　　给定一个数组arr代表得分数组，请返回最少需要多少糖果。 
+　　例如：arr = [1,2,2]，糖果分配[1,2,1]，即可满足要求且数量最少，所以返回4.
+
+【进阶题目】
+
+　　原题目中的两个规则不变，再加一条规则： 
+　　3、任意两个相邻的孩子之间如果得分相同，糖果数必须相同
+
+　　给定一个数组arr代表得分数组，返回最少需要多少糖果。 
+　　例如：arr = [1,2,2]，糖果分配[1,2,2]，即可满足要求且数量最少，所以返回5.
+
+【要求】
+
+　　原文题和进阶问题的时间复杂度都为O(N)，空间复杂度O(1)。
+
+【基本思路】
+
+　　原问题。首先引入左坡和右坡的概念，从左到右依次遍历数组，值递增的部分为左坡，递减的部分为右坡。定义了左坡和右坡后，整个数组就可以分解成很多对左坡和右坡，挨个计算每对左坡和右坡即可。
+
+　　假设数组为[1,4,5,9,3,2]，左坡和右坡分别是[1,4,5,9]，[9,3,2]。对左坡来说，从左到右糖果的分配为[1,2,3,4]，对右坡来说，糖果的分配为[3,2,1]，但是两种分配方式对9这个坡顶的分配是不同的，如何决定？哪个坡更高，就按哪个坡来分配。因为左坡和右坡都是严格的递增和递减，不存在相同的数值，所以，坡的高度就是各自序列的长度。很明显左坡的高度大于右坡的高度(4 > 3)。所以坡顶的分配按照左坡来，最终的分配为[1,2,3,4,2,1]。
+
+#python3.5
+def candy1(arr):
+    def nextMinIndex(arr, start):
+        for i in range(start, len(arr)-1):
+            if arr[i+1] >= arr[i]:
+                return i
+        return len(arr) - 1
+
+    def rightCands(left, right):
+        n = right - left + 1
+        return n * (n+1) // 2
+
+
+    if arr == None or len(arr) == 0:
+        return 0
+    index = nextMinIndex(arr, 0)
+    res = rightCands(0, index)
+    index += 1
+    lbase = 1
+    while index != len(arr):
+        if arr[index] > arr[index-1]:
+            lbase += 1
+            res += lbase
+            index += 1
+        elif arr[index] < arr[index-1]:
+            next = nextMinIndex(arr, index-1)
+            res += rightCands(index-1, next)
+            rbase = next - index + 2
+            res -= rbase if rbase < lbase else lbase
+            lbase = 1
+            index = next + 1
+        else:
+            res += 1
+            lbase = 1
+            index += 1
+    return res
+
+　　进阶问题。针对新规则，需要对左坡和右坡重新定义。从左到右依次遍历数组，值不递减的部分为左坡，不递增的部分为右坡。比如，[1,2,2,1]，左坡为[1,2,2]，右坡为[2,1]。
+
+　　假设数组为[0,1,2,3,3,3,2,2,2,2,2,1,1]，左坡和右坡，分别是[0,1,2,3,3,3]，[3,2,2,2,2,2,1,1]。对左坡来说，从左到右糖果的分配为[1,2,3,4,4,4]，对右坡来说，糖果的分配为[3,2,2,2,2,2,1]，但是两种分配方式对[3,3,3]这三个坡顶的分配还是不同的，如何决定？还是根据坡的高度，哪个坡更高，就按哪个坡来分配，因为左坡和右坡不是严格的递增和递减，可能存在相同的数值，所以，坡的高度不能再通过序列长度来计算（具体做法见如下代码） 。很明显左坡的高度大于右坡的高度(4 > 3)。所以坡顶的分配按照左坡来，最终的分配为[1,2,3,4,4,4,2,2,2,2,2,1,1]。
+
+def candy2(arr):
+    def nextMinIndex(arr, start):
+        for i in range(start, len(arr)-1):
+            if arr[i] < arr[i+1]:
+                return i
+        return len(arr) - 1
+
+    def rightCandsAndBase(arr, left, right):
+        res = 1
+        base = 1
+        for i in range(right-1, left-1, -1):
+            if arr[i] == arr[i+1]:
+                res += base
+            else:
+                base += 1
+                res += base
+        return res, base
+
+    if arr == None or len(arr) == 0:
+        return 0
+    index = nextMinIndex(arr, 0)
+    res, s = rightCandsAndBase(arr, 0, index)
+    index += 1
+    lbase = 1
+    same = 1
+    while index != len(arr):
+        if arr[index] > arr[index-1]:
+            lbase += 1
+            res += lbase
+            index += 1
+        elif arr[index] == arr[index-1]:
+            res += lbase
+            same += 1
+            index += 1
+        else:
+            next = nextMinIndex(arr, index-1)
+            num, rbase = rightCandsAndBase(arr, index-1, next)
+            if rbase < lbase:
+                res += num - rbase
+            else:
+                res += num - rbase + rbase * same - same * lbase
+            index = next + 1
+            same = 1
+            lbase = 1
+    return res
+
+
+
+其他题目---一种消息接受并打印的结构设计
+2017年11月02日 21:03:22
+阅读数：77
+【题目】
+
+　　消息流吐出2，一种结构接收而不打印2，因为1还没出现。 
+　　消息流吐出1，一种结构接收1，并且打印：1，2。 
+　　消息流吐出4，一种结构接收而不打印4，因为3还没有出现。 
+　　消息流吐出5，一种结构接收而不打印5，因为3还没有出现。 
+　　消息流吐出7，一种结构接收而不打印7，因为3还没有出现。 
+　　消息流吐出3，一种结构接收3，并且打印：3，4，5。 
+　　消息流吐出9，一种结构接收而不打印9，因为6还没出现。 
+　　消息流吐出8，一种结构接收而不打印8，因为6还没出现。 
+　　消息流吐出6，一种结构接收6，并且打印：6，7，8，9。 
+　　已知一个消息流会不断地吐出整数1～N，但不一定按照顺序吐出。如果上次打印的数为i，那么当i+1出现是，请打印i+1及其之后接收过的并且连续的所有数，直到1～N全部接收并且打印完，请设计这种接收并打印的结构。
+
+【要求】
+
+　　消息流最终会吐出全部的1～N，当然最终也会打印完所有的1～N，要求接收和打印1～N的整个过程，时间复杂度为O(N)。
+
+【基本思路】
+
+　　对于接收的每一个数，如果能和之前接收的数连续起来，就归入之前的数据区间中，如果不能就单独成为一个区间。每一个区间使用单链表结构实现。
+
+　　例如，接收2的时候，根据2生成一个单链表节点，因为没有其他元素，所以它单独成一个区间[2]；接收1的时候，根据1生成一个节点，然后发现之前的区间[2]可以和1连续起来，所以将该节点归入区间[2]，此时该区间更新为[1,2]；接收4的时候，根据4生成一个节点，没有区间可以和它连续起来，所以它单独成一个区间[4]；然后接收5，和4连续起来，[4]区间更新为[4,5]；然后接收3，3可以和[1,2]连续起来，也可以和[4,5]连续起来，所有整体可以归入一个区间[1~5]。
+
+　　为了加速合并的过程，使用两个哈希表headMap和tailMap，分别用来存放区间的开头节点和结尾节点。假设一个数n被接收，首先将n的节点添加到headMap和tailMap中。然后在headMap中寻找是否有n+1元素，如果有，说明以n+1开头的区间可以向左再添加一个数n，所以将区间扩充1位，将headMap中的n+1元素和tailMap中的n元素删除。然后在tailMap中寻找是否有n-1元素，如果有，说明以n-1结尾的区间可以向右再添加一个数n，所以将区间扩充1位，将tailMap中的n-1元素和headMap中的n元素删除。
+
+　　什么时候打印呢？设置一个变量lastPrint，表示上一次打印的最后一个元素是什么，然后每次在headMap中寻找是否有lastPrint+1元素，如果有的话，将整个以lastPrint+1开头的区间的数都打印，然后更新lastPrint。
+
+【代码实现】
+
+#python3.5
+class Node2:
+    def __init__(self, value):
+        self.value = value
+        self.next = None
+
+class MessageBox:
+    def __init__(self):
+        self.headMap = {}
+        self.tailMap = {}
+        self.lastPrint = 0
+
+    def receive(self, value):
+        node = Node(value)
+        self.headMap[value] = node
+        self.tailMap[value] = node
+        if value + 1 in self.headMap:
+            node.next = self.headMap[value+1]
+            del self.headMap[value+1]
+            del self.tailMap[value]
+        if value - 1 in self.tailMap:
+            self.tailMap[value-1].next = node
+            del self.tailMap[value-1]
+            del self.headMap[value]
+        if self.lastPrint + 1 in self.headMap:
+            self.printValue()
+
+    def printValue(self):
+        head = self.headMap[self.lastPrint+1]
+        del self.headMap[self.lastPrint+1]
+        while head != None:
+            print(head.value, end=' ')
+            head = head.next
+            self.lastPrint += 1
+        del self.tailMap[self.lastPrint]
+
+
+
+其他题目---设计一个没有扩容负担的堆结构
+2017年11月06日 09:14:48
+阅读数：126
+【题目】
+
+　　堆结构一般是使用固定长度的数组结构来实现的。这样的实现虽然足够经典，但存在扩容的负担，比如不断向堆中增加元素，使得固定数组快耗尽时，就不得不申请一个更大的固定数组，然后把原来数组中的对象复制到新的数组中完成堆的扩容，所以，如果扩容时堆中的元素个数为N，那么扩容行为的时间复杂度为O(N)。请设计一种没有扩容负担的堆结构，即在任何时刻有关堆的操作时间复杂度都不超过O(logN)。
+
+【要求】
+
+没有扩容的负担。
+可以生成小根堆，也可以生成大根堆。
+包含getHead方法，返回当前堆顶的值。
+包含getSize方法，返回当前堆的大小。
+包含add(x)方法，即向堆中添加新的元素x，操作后依然是大/小根堆。
+包含popHead方法，即删除并返回堆顶的值，操作后依然是大/小根堆。
+如果堆中的节点个数为N，那么各个方法的时间复杂度为： 
+getHead:　　O(1) 
+getSize:　　O(1) 
+add:　　O(logN) 
+poHead:　　O(logN)
+【基本思路】
+
+　　使用完全二叉树结构来实现堆，二叉树的节点类型如下，比经典的二叉树节点多一条指向父节点的parent指针：
+
+class HeapNode:
+    def __init__(self, value):
+        self.value = value
+        self.left = None
+        self.right = None
+        self.parent = None
+
+　　利用二叉树结构重写堆方法即可，具体参照代码。
+
+【代码实现】
+
+#python3.5
+class HeapNode:
+    def __init__(self, value):
+        self.value = value
+        self.left = None
+        self.right = None
+        self.parent = None
+
+class MyHeap:
+    def __init__(self, comp):
+        self.head = None    #堆头节点
+        self.last = None    #堆尾节点
+        self.size = 0    #当前堆的大小
+        self.comp = comp    #基于比较器决定是大根堆还是小根堆
+
+    def getHead(self):
+        return self.head.value if self.head != None else None
+
+    def getSize(self):
+        return self.size
+
+    def isEmpty(self):
+        return True if self.size == 0 else False
+
+    #添加一个新节点到堆中
+    def add(self, value):
+        newNode = HeapNode(value)
+        if self.size == 0:
+            self.head = newNode
+            self.last = newNode
+            self.size = 1
+            return
+        node = self.last
+        parent = node.parent   
+        #找到尾节点的下一个位置并插入新节点
+        while parent != None and parent.left != node:
+            node = parent
+            parent = node.parent
+        if parent == None:
+            nodeToAdd = self.mostLeft(self.head)
+            nodeToAdd.left = newNode
+            newNode.parent = nodeToAdd
+        elif parent.right == None:
+            parent.right = newNode
+            newNode.parent = parent
+        else:
+            nodeToAdd = self.mostLeft(parent.right)
+            nodeToAdd.left = newNode
+            newNode.parent = nodeToAdd
+        self.last = newNode
+        #建堆过程及其调整
+        self.heapInsertModify()
+        self.size += 1
+
+    def heapInsertModify(self):
+        node = self.last
+        parent = node.parent
+        if parent != None and self.comp(parent.value, node.value):
+            self.last = node.parent
+        while parent != None and self.comp(parent.value, node.value):
+            self.swapClosedTwoNode(node, parent)
+            parent = node.parent
+        if self.head.parent != None:
+            self.head = self.head.parent
+
+    def swapClosedTwoNode(self, node, parent):
+        if node == None or parent == None:
+            return 
+        parentParent = parent.parent
+        parentLeft = parent.left
+        parentRight = parent.right
+        nodeLeft = node.left
+        nodeRight = node.right
+        node.parent = parentParent
+        if parentParent != None:
+            if parentParent.left == parent:
+                parentParent.left = node
+            else:
+                parentParent.right = node
+        parent.parent = node
+        if nodeLeft != None:
+            nodeLeft.parent = parent
+        if nodeRight != None:
+            nodeRight.parent = parent
+        if node == parentLeft:
+            node.left = parent
+            node.right = parentRight
+            if parentRight != None:
+                parentRight.parent = node
+        else:
+            node.left = parentLeft
+            node.right = parent
+            if parentLeft != None:
+                parentLeft.parent = node
+        parent.left = nodeLeft
+        parent.right = nodeRight
+
+    def mostLeft(self,node):
+        while node.left != None:
+            node = node.left
+        return node
+
+    def mostRight(self, node):
+        while node.right != None:
+            node = node.right
+        return node
+
+    def popHead(self):
+        if self.size == 0:
+            return None
+        res = self.head
+        if self.size == 1:
+            self.head = None
+            self.last = None
+            self.size = 0
+            return res.value
+        oldLast = self.popLastAndSetPreviousLast()  #返回尾节点并更新尾节点
+        #如果弹出尾节点，堆的大小等于1的处理
+        if self.size == 1:
+            self.head = oldLast
+            self.last = oldLast
+            return res.value
+        #如果弹出尾节点，堆的大小大于1的处理
+        headLeft = res.left
+        headRight = res.right
+        oldLast.left = headLeft
+        if headLeft != None:
+            headLeft.parent = oldLast
+        oldLast.right = headRight
+        if headRight != None:
+            headRight.parent = oldLast
+        res.left = None
+        res.right = None
+        self.head = oldLast
+        #堆heapify过程
+        self.heapify(self.head)
+        return res.value
+
+    def heapify(self, node):
+        left = node.left
+        right = node.right
+        most = node
+        while left != None:
+            if left != None and self.comp(most.value, left.value):
+                most = left
+            if right != None and self.comp(most.value, right.value):
+                most = right
+            if most == node:
+                break
+            else:
+                self.swapClosedTwoNode(most, node)
+            left = node.left
+            right = node.right
+            most = node
+        if node.parent == self.last:
+            self.last = node
+        while node.parent != None:
+            node = node.parent
+        self.head = node
+
+    def popLastAndSetPreviousLast(self):
+        node = self.last
+        parent = node.parent  #以下是寻找尾节点的上一个节点
+        while parent != None and parent.right != node:
+            node = parent
+            parent = node.parent
+        if parent == None:
+            node = self.last
+            parent = node.parent
+            node.parent = None
+            if parent != None:
+                parent.left = None
+            self.last = self.mostRight(self.head)
+        else:
+            newLast = self.mostRight(parent.left)
+            node = self.last
+            parent = node.parent
+            node.parent = None
+            if parent.left == node:
+                parent.left = None
+            else:
+                parent.right = None
+            self.last = newLast
+        self.size -= 1
+        return node
+
+
+其他题目---随时找到数据流的中位数
+2017年11月06日 09:41:54
+阅读数：167
+【题目】
+
+　　有一个源源不断地吐出整数的数据流，假设你有足够的空间来保存吐出的数。请设计一个名叫MedianHolder的结构，MedianHolder可以随时取得之前吐出所有数的中位数。
+
+【要求】
+
+如果MedianHolder已经保存了吐出的N个数，那么任意时刻将一个新数加入到MedianHolder的过程，其时间复杂度O(logN)。
+取得已经吐出的N个数整体的中位数的过程，时间复杂度O(1)。
+【基本思路】
+
+　　使用两个堆结构，一个大根堆，一个小根堆。将接收的所有数的较小的一半放入大根堆，将接收的较大的一半放入小根堆。如果接收的个数为奇数，中位数就是小根堆和大根堆中元素数量多的那个堆的堆顶，比如吐出的数是6,1,3,0,9,8,7，小根堆中存放6,7,8,9，大根堆存放0,1,3，小根堆的元素个数多，它的堆顶就是该序列的中位数，即6；如果接收的个数是偶数，中位数就是两个堆顶相加除以2。
+
+　　每次接收到一个数，都要正确选择放入哪个堆，小于小根堆堆顶的都放入大根堆，否则放入小根堆。如果出现一个堆的元素个数比另一个堆的元素多两个的情况，将前者的堆顶弹出添加到后者中，并重新调整两个堆。总之要始终保持两个堆元素个数的差值不大于１。
+
+　　这样随时都可以知道已经吐出的所有数处于中间位置的两个数是什么，取得中位数的操作时间复杂度为O(1)，同时根据堆的性质，向堆中添加一个新数，并且调整堆的代价为O(logN)。然而题目有一个很重要的限制“任意时刻将一个新数加入到MedianHolder的过程，其时间复杂度O(logN)”，为了做到“任何时刻”的要求，那么堆的设计不能采用固定数组的实现方式，因为会有扩容的负担。为了解决这个问题，需要设计一个没有扩容负担的堆结构，具体实现参照另一篇博客设计一个没有扩容负担的堆结构。
+
+【代码实现】
+
+#python3.5
+def minHeapComparator(a, b):
+    if a <= b:
+        return False
+    if a > b:
+        return True
+
+def maxHeapComparator(a, b):
+    if a >= b:
+        return False
+    else:
+        return True
+
+
+class MedianHolder:
+    def __init__(self):
+        self.minHeap = MyHeap(minHeapComparator)
+        self.maxHeap = MyHeap(maxHeapComparator)
+
+    def addNum(self, num):
+        if self.maxHeap.isEmpty():
+            self.maxHeap.add(num)
+            return
+        if self.maxHeap.getHead() >= num:
+            self.maxHeap.add(num)
+        else:
+            if self.minHeap.isEmpty():
+                self.minHeap.add(num)
+            elif self.minHeap.getHead() > num:
+                self.maxHeap.add(num)
+            else:
+                self.minHeap.add(num)
+        self.modifyTwoHeapSize()
+
+    def modifyTwoHeapSize(self):
+        if self.minHeap.getSize() == self.maxHeap.getSize() + 2:
+            self.maxHeap.add(self.minHeap.popHead())
+        if self.maxHeap.getSize() == self.minHeap.getSize() + 2:
+            self.minHeap.add(self.maxHeap.popHead())
+
+    def getMedian(self):
+        maxHeapSize = self.maxHeap.getSize()
+        minHeapSize = self.minHeap.getSize()
+        if maxHeapSize + minHeapSize == 0:
+            return None
+        if (maxHeapSize + minHeapSize) & 1 == 0:
+            return (self.maxHeap.getHead() + self.minHeap.getHead()) / 2
+        else:
+            if maxHeapSize > minHeapSize:
+                return self.maxHeap.getHead()
+            else:
+                return self.minHeap.getHead()
+
+
+
+其他题目---在两个长度相等的排序数组中找到上中位数
+2017年11月06日 22:16:35
+阅读数：128
+【题目】
+
+　　给定两个有序数组arr1和arr2，已知两个数组的长度都为N，求两个数组中所有数的上中位数。要求时间复杂度O(logN)，空间复杂度O(1)。
+
+【基本思路】
+
+　　看到时间复杂度为O(logN)，很容易想到二分查找。过程如下：
+
+如果每个数组中只有一个元素，较小的那个元素就是整体的上中位数，如果两个元素相等，随便返回哪个都可以。
+
+如果数组中不止一个元素，找到两个数组的中间位置mid1和mid2。
+
+如果arr1[mid1] == arr2[mid2]，不管每个数组中元素的个数是奇数还是偶数，这两个数都可以是整体的上中位数，返回其中一个就可以。
+
+如果arr1[mid1] > arr2[mid2]，每个数组的个数是奇数的情况下：数组arr1中mid1位置以后的数都不可能是整体的上中位数，数组arr2中mid2位置以前的数都不可能是整体的上中位数。所以现在只需要考虑arr1[left1…mid1]、arr2[mid2…right]，这两部分的元素个数相同，它们的上中位数就是整体的上中位数。
+
+如果arr1[mid1] > arr2[mid2]，每个数组的个数是偶数的情况下：数组arr1中mid1位置以后的数都不可能是整体的上中位数，数组arr2中mid2位置以后包括mid2位置，都不可能是整体的上中位数。所以现在只需要考虑arr1[left1…mid1]、arr2[mid2+1…right]，这两部分的元素个数相同，它们的上中位数就是整体的上中位数。
+
+arr1[mid1] < arr2[mid2]的情况，分析同上。
+
+【代码实现】
+
+#python3.5
+def getUpMedian(arr1, arr2):
+    if arr1 == None or arr2 == None or len(arr1) != len(arr2):
+        raise Exception("Your arr is invalid!")
+    start1 = 0
+    end1 = len(arr1) - 1
+    start2 = 0
+    end2 = len(arr2) - 1
+    while start1 < end1:
+        mid1 = (start1 + end1) // 2
+        mid2 = (start2 + end2) // 2
+        offset = (end1 - start1 + 1) & 1 ^ 1
+        if arr1[mid1] == arr2[mid2]:
+            return arr1[mid1]
+        elif arr1[mid1] > arr2[mid2]:
+            end1 = mid1
+            start2 = mid2 + offset
+        else:
+            start1 = mid1 + offset
+            end2 = mid2
+    return min(arr1[start1], arr2[start2])
+
+
+
+其他题目---在两个排序数组中找到第Ｋ小的数
+2017年11月08日 10:51:18
+阅读数：97
+【题目】
+
+　　给定两个有序数组arr1和arr2，再给定一个整数k，返回所有的数中第k小的数。要求时间复杂度O(log(min{M,N}))，额外空间复杂度O(1)。
+
+【基本思路】
+
+　　在解决这道题之前，先解决一个小问题：在两个长度相等的排序数组中找到上中位数。本题也深度利用了这个问题的解法。以下的getUpMedian方法的功能就是，在a1[s1…e1]和a2[s2…e2]两段长度相等的范围上找上中位数。
+
+ def getUpMedian(a1, s1, e1, a2, s2, e2):
+        while s1 < e1:
+            mid1 = (e1 + s1) // 2
+            mid2 = (e2 + s2) // 2
+            offset = (e1 - s1 + 1) & 1 ^ 1
+            if arr1[mid1] == arr2[mid2]:
+                return arr1[mid1]
+            elif arr1[mid1] > arr2[mid2]:
+                e1 = mid1
+                s2 = mid2 + offset
+            else:
+                s1 = mid1 + offset
+                e2 = mid2
+        return min(arr1[s1], arr2[s2])
+
+　　假设两个数组，长度较短的数组为shortArr，长度记为lenS；长度较长的数组为longArr，长度记为lenL。那么对于整数k，有以下三种情况： 
+　　 
+　　1、k < lenS。那么在shortArr中选前k个数，在longArr中也选前k个数，这两段数组中的中位数就是整体的第k个最小。
+
+　　2、k > lenL。对于longArr中的前k-lenS-1个数，都不能满足要求，因为即使它们比shortArr中所有的数都大，也无法达到第k个。longArr中的第k-lenS个数，如果它比shortArr中的所有数都大，那么它就是第k小数，否则，它也不是。对于shortArr中的前k-lenL-1个数，都不能满足要求，因为即使它们比longArr中所有的数都大，也无法达到第k个。shortArr中的第k-lenL个数，如果它比longArr中的所有数都大，那么它就是第k小数，否则，它也不是。如果shortArr[k-lenL-1]和longArr[k-lenS-1]都不是第k小的数，那么shortArr[k-lenL…lenS-1]和longArr[k-LenS…lenL-1]这两段数组 的中位数就是整体的第k小数。
+
+　　3、lenS < k < lenL。对于longArr中的前k-lenS-1个数，都不能满足要求，因为即使它们比shortArr中所有的数都大，也无法达到第k个。longArr中的第k-lenS个数，如果它比shortArr中的所有数都大，那么它就是第k小数，否则，它也不是。对于longArr中的第k个数以后部分，也都不能满足要求。如果longArr[k-lenS-1]不是第k小数，那么shortArr[0…lenS-1]和longArr[k-lenS…lenL-1]这两段数组 的中位数就是整体的第k小数。
+
+【代码实现】
+
+#python3.5
+def findKthNum(arr1, arr2, k):
+    if arr1 == None or arr2 == None:
+        raise Exception("Your arr is invalid!")
+    if k < 1 or k > (len(arr1) + len(arr2)):
+        raise Exception("K is invalid!")
+    longs = arr1 if len(arr1) > len(arr2) else arr2
+    shorts = arr1 if len(arr1) <= len(arr2) else arr2
+    l = len(longs)
+    s = len(shorts)
+    if k <= s:
+        return getUpMedian(shorts, 0, k-1, longs, 0, k-1)
+    if k > l:
+        if longs[k-s-1] >= shorts[-1]:
+            return longs[k-s-1]
+        if shorts[k-l-1] >= longs[-1]:
+            return shorts[k-l-1]
+        return getUpMedian(longs, k-s, l-1, shorts, k-l, s-1)
+    if longs[k-s-1] >= shorts[-1]:
+        return longs[k-s-1]
+    print(222)
+    return getUpMedian(longs, k-s, k-1, shorts, 0, s-1)
+
+
+
+其他题目---两个有序数组间相加和的TopK问题
+2017年11月09日 16:46:14
+阅读数：101
+【题目】
+
+　　给定两个有序数组arr1和arr2，再给定一个整数k，返回来自arr1和arr2的两个数相加和最大的前k个，两个数必须分别来自两个数组。要求时间复杂度O(klogk)。
+
+【基本思路】
+
+　　使用大根堆结构。假设arr1的长度是M，arr2的长度是N。因为是排序数组，arr1中最后一个数加上arr2中最后一个数一定就是最大的相加和。将这个数压入大根堆中。然后从大根堆中弹出一个堆顶，此时这个堆顶一定是(M-1, N-1)位置的和，表示获得一个最大相加和。然后，将两个相邻位置的和再放入堆中，即位置(M-1,N-2)和(M-2, N-1)，因为除(M-1, N-1)位置的和外，最大的相加和一定在位置(M-1,N-2)和(m-2, N-1)中产生。重新调整大根堆，然后继续弹出，继续将弹出元素的两个相邻位置添加到堆中，直到弹出的元素达到K个。
+
+【代码实现】
+
+#python3.5
+class Heap:
+    def __init__(self, row, col, value):
+        self.row = row
+        self.col = col
+        self.value = value
+
+def getTopKSum(arr1, arr2, k):
+    def heapInsert(heap, row, col, data, i):
+        node = Heap(row, col, data)
+        heap[i] = node
+        parent = (i-1) // 2
+        while parent >= 0 and heap[parent].value < heap[i].value:
+            heap[parent], heap[i] = heap[i], heap[parent]
+            i = parent
+            parent = (i-1) // 2
+
+    def popHead(heap, heapSize):
+        res = heap[0]
+        heap[0], heap[heapSize-1] = heap[heapSize-1], heap[0]
+        heapify(heap, 0, heapSize-1)
+        return res
+
+    def heapify(heap, i, heapSize):
+        left = 2 * i + 1
+        right = 2 * i + 2
+        most = i
+        while left < heapSize:
+            if heap[left].value > heap[i].value:
+                most = left
+            if right < heapSize and heap[right].value > heap[most].value:
+                most = right
+            if most == i:
+                break
+            else:
+                heap[most], heap[i] = heap[i], heap[most]
+                i = most
+                left = 2 * i + 1
+                right = 2 * i + 2
+
+    def isContains(row, col, posSet):
+        return '_'.join([str(row),str(col)]) in posSet
+
+    def addPosToSet(row, col, posSet):
+        posSet.add('_'.join([str(row), str(col)]))
+
+
+
+    if arr1 == None or arr2 == None or k < 1 or k > len(arr1) * len(arr2):
+        return
+    heap = [0 for i in range(k+1)]
+    row = len(arr1) - 1
+    col = len(arr2) - 1
+    heapSize = 0
+    heapInsert(heap, row, col, arr1[row] + arr2[col], heapSize)
+    heapSize += 1
+    posSet = set()
+    count = 0
+    res = []
+    while count < k:
+        cur = popHead(heap, heapSize)
+        heapSize -= 1
+        res.append(cur.value)
+        r = cur.row
+        c = cur.col
+        if not isContains(r-1,c, posSet):
+            heapInsert(heap, r-1, c, arr1[r-1] + arr2[c], heapSize)
+            heapSize += 1
+            addPosToSet(r-1, c, posSet)
+        if not isContains(r, c-1, posSet):
+            heapInsert(heap, r, c-1, arr1[r] + arr2[c-1], heapSize)
+            heapSize += 1
+            addPosToSet(r, c-1, posSet)
+        count += 1
+    return res
+
+
+
+其他题目---出现次数的TopK问题
+2017年11月09日 22:07:39
+阅读数：85
+【题目】
+
+　　给定String类型的数组strArr，再给定整数k，请严格按照排名顺序打印出现次数前k名的字符串。要求时间复杂度O(Nlogk)。
+
+【进阶题目】
+
+　　设计并实现TopKRecord结构，可以不断地向其中加入字符串，并且可以根据字符串出现的情况随时打印加入次数最多的前k个字符串，具体为：
+
+　　1.k在TopKRecord实例生成时指定，并且不再变化（k是构造函数的参数）。 
+　　 2.含有add(String str)方法，即向TopKRecord中加入字符串。 
+　　3.含有printTopK()方法，即打印加入次数最多的前k个字符串，打印有哪些字符串和对应出现的次数即可，不要求严格按排名顺序打印。
+
+　　要求：
+
+在任何时刻，add方法的时间复杂度不超过O(logk)。
+在任何时刻，printTopK方法的时间复杂度不超过O(k)。
+【基本思路】
+
+　　原问题。使用一个哈希表记录每种字符串出现的次数，遍历一遍哈希表，根据该哈希表构建一个大小为k的小根堆，该小根堆以词频作为衡量标准，小根堆中的字符串就是出现次数前TopK的字符串。具体过程见如下代码：
+
+class FreNode:
+    def __init__(self, st, times):
+        self.str = st
+        self.times = times
+
+#python3.5
+#原问题
+def printTopKAndRank(strArr, k):
+    def heapInsert(heap, i):
+        parent = (i - 1) // 2
+        while parent >= 0 and heap[parent].times > heap[i].times:
+            heap[parent], heap[i] = heap[i], heap[parent]
+            i = parent
+            parent = (i - 1) // 2
+
+    def heapify(heap, i, heapSize):
+        left = 2 * i + 1
+        right = 2 * i + 2
+        most = i
+        while left < heapSize:
+            if heap[left].times < heap[i].times:
+                most = left
+            if right < heapSize and heap[right].times < heap[most].times:
+                most = right
+            if most == i:
+                break
+            else:
+                heap[most], heap[i] = heap[i], heap[most]
+                i = most
+                left = 2 * i + 1
+                right = 2 * i + 2
+
+    if strArr == None or len(strArr) == 0 or k < 1 or k > len(strArr):
+        return
+    map = {}
+    for element in strArr:
+        if element in map:
+            map[element] += 1
+        else:
+            map[element] = 1
+    heap = [0 for i in range(k)]
+    index = 0
+    for key,value in map.items():
+        curNode = FreNode(key, value)
+        if index != k:
+            heap[index] = curNode
+            heapInsert(heap, index)
+            index += 1
+        else:
+            if heap[0].times < curNode.times:
+                heap[0] = curNode
+                heapify(heap, 0, k)
+    for i in range(index-1, 0, -1):
+        heap[0], heap[i] = heap[i],heap[0]
+        heapify(heap,0,i)
+    for i in range(index):
+        print("No." + str(i+1) + " :" + heap[i].str + " times: " + str(heap[i].times))
+
+　　进阶问题。进阶问题的关键在于，字符串出现的次数是动态的，当然也可以向原问题一样，每加入一个字符串，就更新哈希表以及小根堆。这样可以做到add方法的时间复杂度为O(1)，但是，每次printTopK的时候，都需要遍历一遍哈希表并且重新构建小根堆，时间复杂度为O(Nlogk)，显然不符合题意。
+
+　　要做到printTopK的时间复杂度为O(logk)，我们就希望每加入一个字符串的时候，可以利用到之前创建的小根堆，而不是直接重建小根堆。
+
+　　因此，我们在原问题的基础上改进一下，每次放入小根堆的元素都记录下它在小根堆中的位置以及它的词频。这样的好处是：假设一个字符串出现了一次，如果字符串已经在小根堆中，此时只需要在小根堆中找到这个字符串所在的位置，让该字符串的词频加1，然后从该位置开始向下调整小根堆即可。如果该字符串之前不在小根堆中，只需要看它的词频加一后是否大于堆顶的词频，如果大的话，更新堆顶，并向下调整堆。每次调整时间复杂度都为O(logk)。
+
+　　具体的实现参见如下代码：
+
+#进阶问题
+class TopKRecord:
+    index = 0    #目前堆中的元素个数
+    strNodeMap = {}   #记录字符串和node的对应关系
+    nodeIndexMap = {}  #记录node在堆中的位置，如果不在堆中则为-1
+
+    def __init__(self, size):
+        self.heap = [0 for i in range(size)]
+
+    def add(self, str1):
+        preIndex = -1
+        curNode = None
+        if str1 not in self.strNodeMap:
+            curNode = FreNode(str1, 1)
+            self.strNodeMap[str1] = curNode
+            self.nodeIndexMap[curNode] = -1
+        else:
+            self.strNodeMap[str1].times += 1
+            curNode = self.strNodeMap[str1]
+            preIndex = self.nodeIndexMap[curNode]
+        if preIndex == -1:
+            if self.index == len(self.heap):
+                if curNode.times > self.heap[0].times:
+                    self.nodeIndexMap[self.heap[0]] = -1
+                    self.nodeIndexMap[curNode] = 0
+                    self.heap[0] = curNode
+                    self.heapify(0, self.index)
+            else:
+                self.nodeIndexMap[curNode] = self.index
+                self.heap[self.index] = curNode
+                self.heapInsert(self.index)
+                self.index += 1
+        else:
+            self.heapify(preIndex, self.index)
+
+    def printTopK(self):
+        print("TOP:")
+        for i in range(self.index):
+            print("Str: " + self.heap[i].str + " Times:" + str(self.heap[i].times))
+
+    def heapify(self, i, heapSize):
+        left = 2 * i + 1
+        right = 2 * i + 2
+        smallest = i
+        while left < heapSize:
+            if self.heap[left].times < self.heap[i].times:
+                smallest = left
+            if right < heapSize and self.heap[right].times < self.heap[smallest].times:
+                smallest = right
+            if smallest == i:
+                break
+            else:
+                self.nodeIndexMap[self.heap[i]] = smallest
+                self.nodeIndexMap[self.heap[smallest]] = i
+                self.heap[i], self.heap[smallest] = self.heap[smallest], self.heap[i]
+                i = smallest
+                left = 2 * i + 1
+                right = 2 * i + 2
+
+    def heapInsert(self, i):
+        while i > 0:
+            parent = (i - 1) // 2
+            if self.heap[parent].times > self.heap[i].times:
+                self.nodeIndexMap[self.heap[i]] = parent
+                self.nodeIndexMap[self.heap[parent]] = i
+                self.heap[i], self.heap[parent] = self.heap[parent], self.heap[i]
+                i = parent
+            else:
+                break
+
+
+
+其他题目---KMP算法
+2017年11月10日 10:27:46
+阅读数：114
+【题目】
+
+　　给定两个字符串str和match，长度分别为N和M。实现一个算法，如果字符串str中含有子串match，则返回match在str中的开始位置，不含有则返回-1。
+
+【代码实现】
+
+#python3.5
+def getIndexOf(strS, strM):
+    def getNextArray(str1):
+        if len(str1) == 1:
+            return [-1]
+        nextArr = [0 for i in range(len(str1))]
+        nextArr[0] = -1
+        nextArr[1] = 0
+        pos = 2
+        cn = 0
+        while pos < len(str1):
+            if str1[pos-1] == str1[cn]:
+                nextArr[pos] = cn + 1
+                pos += 1
+                cn += 1
+            elif cn == 0:
+                nextArr[pos] = 0
+                pos += 1
+            else:
+                cn = nextArr[cn]
+        return nextArr
+
+    if strS == None or strM == None or len(strM) < 1 or len(strS) < len(strM):
+        return -1
+    nextArr = getNextArray(strM)
+    si = 0
+    mi = 0
+    while si < len(strS) and mi < len(strM):
+        if strS[si] == strM[mi]:
+            si += 1
+            mi += 1
+        elif mi == 0:
+            si += 1
+        else:
+            mi = nextArr[mi]
+    return -1 if mi != len(strM) else si - mi 
+
+
+其他题目---Manacher算法
+2017年11月10日 10:45:02
+阅读数：108
+【题目】
+
+　　给定一个字符串str，返回str中最长回文子串的长度。要求时间复杂度O(N)。
+
+【进阶题目】
+
+　　给定一个字符串str，想通过添加字符的方式使得str整体都变成回文字符串，但要求只能在str的末尾添加字符，请返回在str后面添加的最短字符串。要求时间复杂度O(n)。
+
+【代码实现】
+
+#python3.5
+#原问题
+def manacherString(string):
+    res = [0 for i in range(len(string) * 2 + 1)]
+    index = 0
+    for i in range(len(res)):
+        if i & 1 == 0:
+            res[i] = "#"
+        else:
+            res[i] = string[index]
+            index += 1
+    return res
+
+def maxLcpsLength(str1):
+    if str1 == None or len(str1) == 0:
+        return 0
+    mStr = manacherString(str1)
+    help = [0 for i in range(len(mStr))]
+    index = -1
+    right = -1
+    maxLen = 0
+    for i in range(len(mStr)):
+        if right > i:
+            help[i] = min(right - i, 2 * index - i)
+        else:
+            help[i] = 1
+        while i + help[i] < len(mStr) and i - help[i] > -1:
+            if mStr[i+help[i]] == mStr[i-help[i]]:
+                help[i] += 1
+            else:
+                break
+        if i + help[i] > right:
+            right = i + help[i]
+            index = i
+        maxLen = max(maxLen, help[i])
+    return maxLen - 1
+
+
+#进阶题目
+def shortestEnd(str1):
+    if str1 == None or len(str1) == 0:
+        return 0
+    mStr = manacherString(str1)
+    help = [0 for i in range(len(mStr))]
+    index = -1
+    right = -1
+    maxLen = 0
+    maxContainsEnd = 0
+    for i in range(len(mStr)):
+        if right > i:
+            help[i] = min(right-i, help[2*index-i])
+        else:
+            help[i] = 1
+        while i + help[i] < len(mStr) and i - help[i] > -1:
+            if mStr[i+help[i]] == mStr[i-help[i]]:
+                help[i] += 1
+            else:
+                break
+        if i + help[i] > right:
+            right = i + help[i]
+            index = i
+        if right == len(mStr):
+            maxContainsEnd = help[i]
+            break
+    res = []
+    for i in range(len(str1)-maxContainsEnd+1):
+        res.append(str1[i])
+    return ''.join(res[::-1])
+
+
+
+其他题目---丢棋子问题
+2017年11月12日 14:04:03
+阅读数：142
+【题目】
+
+　　一座大楼有0～N层，地面算作第0层，最高的一层为第N层。已知棋子从第0层掉落肯定不会摔碎，从第i层掉落可能会摔碎，也可能不会摔碎(1≤i≤N)。给定整数N作为楼层数，再给定整数K作为棋子数，返回如果想找到棋子不会摔碎的最高层，即使在最差的情况下扔的最少次数。一次只能扔一个棋子。
+
+【基本思路】
+
+　　方法一。递归。假设递归函数P(N, K)的返回值是N层楼有K个棋子在最差情况下扔的最少次数。
+
+　　1、如果N == 0，也就是楼层只有第0层，那么不用试，棋子肯定不会摔碎，即P(0, K) = 0。 
+　　2、如果K == 1，也就是楼层有N层，但是只有一个棋子，这时只能从一层开始一层一层往上试，最坏情况下要一直试到第N层，即P(N, 1) = N。 
+　　3、以上两种情况比较特殊，对于一般情况(N>0, k>1)，我们需要考虑第一个棋子从哪层开始扔，如果第1个棋子从第i层开始扔，有两种情况： 
+　　1）碎了，此时只需要考虑i层以下的楼层就可以了，因此问题就变成了还剩下i-1层楼，还剩下K-1个棋子，所以总步数为1 + P(i-1, K-1)。 
+　　2）没碎，此时只需要考虑i层以上的楼层就可以了，因此问题就变成了还剩下N-i层楼，仍有K个棋子，所以总步数为1 + P(N-i, K)。 
+　　 
+　　根据题意，1）和2）中哪个情况最差，就选哪一种情况，所以最后取值为max(P(i-1, K-1), P(N-i, K)) + 1。那么，第一个棋子应该从哪层开始扔会使得所扔的次数最少？依次从1层试到N层，选择最终步数最少的哪种情况即可。
+
+　　该方法是暴力递归的方法，如果楼数为N，将尝试N种可能。在下一步的递归中，楼数最多是N-1层，将尝试N-1种可能，所以时间复杂度为O(N!)。具体过程见如下代码：
+
+#python3.5
+def chessQuestion1(nLevel, kChess):
+    def process1(nLevel, kChess):
+        if nLevel == 0:
+            return 0
+        if kChess == 1:
+            return nLevel
+        minTimes = sys.maxsize
+        for i in range(1, nLevel+1):
+            minTimes = min(minTimes, max(process1(i-1, kChess-1), process1(nLevel-i, kChess)))
+        return minTimes + 1
+
+    if nLevel < 1 or kChess <1:
+        return 0
+    if kChess == 1:
+        return nLevel
+    return process1(nLevel, kChess)
+
+　　方法二。动态规划。通过上述分析可知，P(N, K)过程依赖P(0…N-1, K-1)和P(0…N-1, K)。所以可以用填表格的方式优化暴力递归，减少递归重复计算，如下所示： 
+dp[0][K] = 0, dp[N][1] = N, dp[N][K] = min{max{dp[i-1][K-1], dp[N-i][k]}(1<=i<=N)} + 1 
+　　时间复杂度O(N2∗K)
+
+def chessQuestion2(nLevel, kChess):
+    if nLevel < 1 or kChess < 1:
+        return 0
+    if kChess == 1:
+        return nLevel
+    dp = [[0 for i in range(nLevel+1)] for j in range(kChess+1)]
+    for i in range(nLevel+1):
+        dp[1][i] = i
+    for i in range(2, kChess+1):
+        for j in range(1, nLevel+1):
+            dp[i][j] = sys.maxsize
+            for k in range(1, j+1):
+                dp[i][j] = min(dp[i][j], max(dp[i-1][k-1], dp[i][j-k]))
+            dp[i][j] += 1
+    return dp[-1][-1]
+
+　　方法三。动态规划空间压缩。dp[i][j]只需要它左边的数据和上一排的数据，因此可以只使用两个一维数组。
+
+def chessQuestion3(nLevel, kChess):
+    if nLevel < 1 or kChess < 1:
+        return 0
+    if kChess == 1:
+        return nLevel
+    preArr = [0 for i in range(nLevel+1)]
+    curArr = [0 for i in range(nLevel+1)]
+    for i in range(nLevel+1):
+        curArr[i] = i
+    for i in range(2, kChess+1):
+        preArr = copy.copy(curArr)
+        curArr[2] = 0
+        for j in range(1, nLevel+1):
+            minTimes = sys.maxsize
+            for k in range(1, j+1):
+                minTimes = min(minTimes, max(preArr[k-1], curArr[j-k]))
+            curArr[j] = minTimes + 1
+    return curArr[-1]
+
+　　方法四。利用 “四边形不等式”进行优化。：
+
+　　1、如果已经求出了k+1个棋子在解决n层楼时的最少步骤为dp[n][k+1]，假设此时第一个棋子在第m层扔最终导致了最优解，那么在求k个棋子解决n层楼时，第一个棋子不需要再尝试m以上的楼层。
+
+　　2、如果已经求出了k个棋子在解决n-1层楼时的最少步骤为dp[n-1][k]，假设此时第一个棋子在第m层扔最终导致了最优解，那么在求k个棋子解决n层楼时，第一个棋子不需要再尝试m以下的楼层。 
+　　 
+　　也就是说，动态规划表中两个参数分别为棋子数和楼数，楼数变多以后，第一个棋子的尝试楼层的下限是可以确定的。棋子变少之后，第一个棋子的尝试楼层的上限是可以确定。这样就省去了很多无效的枚举过程。该方法可以使动态规划方法的时间复杂度降低一个维度，O(N2∗k) -> O(N2)。
+
+def chessQuestion4(nLevel, kChess):
+    if nLevel < 1 or kChess < 1:
+        return 0
+    if kChess == 1:
+        return nLevel
+    dp = [[0 for i in range(kChess+1)] for j in range(nLevel+1)]
+    cands = [0 for i in range(kChess+1)]
+    for i in range(nLevel+1):
+        dp[i][1] = i
+    for i in range(1, kChess+1):
+        dp[1][i] = 1
+        cands[i] = 1
+    for i in range(2, nLevel+1):
+        for j in range(kChess, 1, -1):
+            minEnum = cands[j]
+            maxEnum = i if j == kChess else cands[j+1]
+            minTimes = sys.maxsize
+            for k in range(minEnum, maxEnum+1):
+                cur = max(dp[k-1][j-1], dp[i-k][j])
+                if cur <= minTimes:
+                    minTimes = cur
+                    cands[j] = k
+            dp[i][j] = minTimes + 1
+    return dp[-1][-1]
+
+
+其他题目---画匠问题
+2017年11月12日 19:36:21
+阅读数：67
+【题目】
+
+　　给定一个整型数组arr，数组中的每个值都为正数，表示完成一幅画作需要的时间，再给定一个正数num表示画匠的数量，每个画匠只能画连在一起的画作。所有的画匠并行工作，请返回完成所有的画作需要的最少时间。
+
+【基本思路】
+
+　　方法一。如果画匠的数量大于画作的数量，每个人完成一幅画就是最优解，即返回arr中的最大值。如果只有一个画匠，那么对于这个画匠来说，arr[0…j]上的画作最少时间就是arr[0…j]的累加和。如果有两个画匠，有如下几种方案：
+
+　　1、第一个画匠负责arr[0]，第二个画匠负责arr[1…j]，所需的时间为max{sum[0], sum[1…j]}。 
+　　2、第一个画匠负责arr[0…1]，第二个画匠负责arr[2…j]，所需的时间为max{sum[0…1], sum[2…j]}。 
+　　3、第一个画匠负责arr[0…k]，第二个画匠负责arr[k+1…j]，所需要的时间为max{sum[0…k], sum[k+1…j]}。
+
+　　所有情况中所需要时间最少的就是最终的答案。
+
+　　当画匠数量大于2时，假设dp[i][j]表示i个画匠搞定arr[0…j]这些画所需要的最少时间，那么有如下几种方案：
+
+　　1、第1～i-1个画匠负责arr[0]，第i个画匠负责arr[1…j]，所需的时间为max{dp[i-1][0], sum[1…j]}。 
+　　2、第1～i-1个画匠负责arr[0…1]，第i个画匠负责arr[2…j]，所需的时间为max{dp[i-1][1], sum[2…j]}。 
+　　3、第1～i-1个画匠负责arr[0…k]，第i个画匠负责arr[k+1…j]，所需要的时间为max{dp[i-1][k], sum[k+1…j]}。
+
+　　哪种情况所需要的时间最少，dp[i][j]的值就等于哪个。下面是使用空间压缩后的动态规划的代码：
+
+#python3.5
+def painterQuestion1(arr, num):
+    if arr == None or len(arr) == 0 or num < 1:
+        raise Exception("Error!")
+    if len(arr) == 1:
+        return arr[0]
+    if len(arr) <= num:
+        minTime = arr[0]
+        for i in range(len(1, arr)):
+            minTime = max(minTime, arr[i])
+        return minTime
+    sumArr = [0 for i in range(len(arr))]
+    map = [0 for i in range(len(arr))]
+    sumArr[0] = arr[0]
+    map[0] = arr[0]
+    for i in range(1, len(arr)):
+        sumArr[i] = sumArr[i-1] + arr[i]
+        map[i] = sumArr[i]
+    for i in range(1, num):
+        for j in range(len(arr)-1, i-1, -1):
+            minTime = sys.maxsize
+            for k in range(i-1, j+1):
+                minTime = min(minTime, max(map[k], sumArr[j]-sumArr[k]))
+            map[j] = minTime
+    return map[-1]
+
+　　方法二。使用 “四边形不等式”优化动态规划。
+
+　　假设计算dp[i-1][j]时，在最好的划分方案中，第i-1个画匠负责arr[a…j]的画作。在计算dp[i][j+1]时，在最好的划分方案中，第i个画匠负责arr[b…j]的画作。那么在计算dp[i][j]时，假设最好的划分方式是让第i个画匠负责arr[k…j]，那么k的范围一定是[a, b]，这样就省去了很多无效的枚举过程，可以将时间复杂度降低一个维度，O(N2∗M) -> O(N2)。具体实现参见如下代码：
+
+def painterQuestion2(arr, num):
+    if arr == None or len(arr) == 0 or num < 1:
+        raise Exception("Error!")
+    if len(arr) == 1:
+        return arr[0]
+    if len(arr) <= num:
+        minTime = arr[0]
+        for i in range(1, len(arr)):
+            minTime = max(minTime, arr[i])
+        return minTime
+    sumArr = [0 for i in range(len(arr))]
+    map = [0 for i in range(len(arr))]
+    sumArr[0] = arr[0]
+    map[0] = arr[0]
+    for i in range(1, len(arr)):
+        sumArr[i] = sumArr[i-1] + arr[i]
+        map[i] = sumArr[i]
+    cands = [0 for i in range(len(arr))]
+    for i in range(1, num):
+        for j in range(len(arr)-1, i-1, -1):
+            minEnum = cands[j]
+            maxEnum = j if j == len(arr)-1 else cands[j+1]
+            minTime = sys.maxsize
+            for k in range(minEnum, maxEnum+1):
+                cur = max(map[k], sumArr[j] - sumArr[k])
+                if cur < minTime:
+                    minTime = cur
+                    cands[j] = k
+            map[j] = minTime
+    return map[-1]
+
+
+def painterQuestion3(arr, num):
+    def getNeedNum(arr, limit):
+        res = 1
+        sum = 0
+        for i in range(len(arr)):
+            if arr[i] > limit:
+                return sys.maxsize
+            sum += arr[i]
+            if sum > limit:
+                res += 1
+                sum = arr[i]
+        return res
+
+    if arr == None or len(arr) == 0 or num < 1:
+        raise Exception("Error!")
+    if len(arr) == 1:
+        return arr[0]
+    if len(arr) <= num:
+        minTime = arr[0]
+        for i in range(1, len(arr)):
+            minTime = max(minTime, arr[i])
+        return minTime
+    minSum = 0
+    maxSum = 0
+    for i in range(len(arr)):
+        maxSum += arr[i]
+    while minSum != maxSum - 1:
+        mid = (minSum + maxSum) // 2
+        if getNeedNum(arr, mid) > num:
+            minSum = mid
+        else:
+            maxSum = mid
+    return maxSum
+
+
+
+其他题目---邮局选址问题
+2017年11月12日 20:13:35
+阅读数：718
+【题目】
+
+　　一条直线上有居民点，邮局只能建在居民点上。给定一个有序整型数组arr，每个值表示居民点的一维坐标，再给定一个正数num，表示邮局数量。选择num个居民点建立num个邮局，使得所有的居民点到邮局的总距离最短，返回最短的总距离。
+
+【基本思路】
+
+　　方法一。动态规划。首先解决一个问题，如果在arr[0…j]上只能建立一个邮局，最短总距离是多少？如果居民点有奇数个，邮局建在最中间的那个居民点可以使总距离最短，如果居民点有偶数个，中点有两个，邮局建在哪个都可以让总距离最短。可以根据这个思路计算上面的问题。
+
+　　生成规模为N×M的矩阵w，w[i][j]表示如果在arr[i…j]上只能建立一个邮局，最短的总距离。w[i][j]的值可以通过如下计算得到： 
+　 
+　　w[i][j] = w[i][j-1] + arr[j] - arr[(i + j) / 2]
+
+　　有了w矩阵后，接下来进行动态规划过程。假设dp[i][j]表示如果在arr[0…j]上建立i+1个邮局的最短总距离。所以dp[0][j]的值表示如果在arr[0…j]上建立一个邮局最短的总距离。很明显，就是w[0][j]。那么dp[0][0…N-1]上的所有值都可以直接用w[0][0…N-1]赋值。
+
+　　当可以建立不止一个邮局时，情况如下： 
+　　 
+　　1、前i-1个邮局负责arr[0]，第i个邮局负责arr[1…j]，总距离为dp[i-1][0] + w[1][j] 
+　　2、前i-1个邮局负责arr[0…1]，第i个邮局负责arr[2…j]，总距离为dp[i-1][1] + w[2][j] 
+　　3、前i-1个邮局负责arr[0…k]，第i个邮局负责arr[k+1…j]，总距离为dp[i-1][k] + w[k+1][j]
+
+　　实际上k的取值到j-1就可以了，因为在还有最后一个居民的时候仍然可以建立一个邮局，那么在该居民点建立一个邮局一定没坏处，这样就可以不用考虑：前i-1个邮局负责arr[0…j]，第i个邮局负责arr[j+1…j]的情况，避免w矩阵溢出。
+
+#python3.5
+def siteSelectionQuestion1(arr, num):
+    if arr == None or len(arr) == 0 or num < 1 or len(arr) < num:
+        return 0
+    w = [[0 for i in range(len(arr))] for j in range(len(arr))]
+    for i in range(len(arr)):
+        for j in range(i+1, len(arr)):
+            w[i][j] = w[i][j-1] + arr[j] - arr[(i+j) // 2]
+    dp = [w[0][i] for i in range(len(arr))]
+    for i in range(1, num):
+        for j in range(len(arr)-1, i-1, -1):
+            minDistance = sys.maxsize
+            for k in range(i-1, j):
+                minDistance = min(minDistance, max(dp[k], w[k+1][j]))
+            dp[j] = minDistance
+    return dp[-1]
+
+　　方法二。使用“四边形不等式”优化动态规划。
+
+　　假设计算dp[i-1][j]时，在最好的划分方案中，第i-1个邮局负责arr[a…j]的居民点。在计算dp[i][j+1]时，在最好的划分方案中，第i个邮局负责arr[b…j]的居民点。那么在计算dp[i][j]时，假设最好的划分方式是让第i个邮局负责arr[k…j]，那么k的范围一定是[a, b]，这样就省去了很多无效的枚举过程，可以将时间复杂度降低一个维度，O(N2∗M)−>O(N2)。具体实现参见如下代码：
+
+def siteSelectionQuestion2(arr, num):
+    if arr == None or len(arr) == 0 or num < 1 or len(arr) < num:
+        return 0
+    w = [[0 for i in range(len(arr))] for j in range(len(arr))]
+    for i in range(len(arr)):
+        for j in range(i+1, len(arr)):
+            w[i][j] = w[i][j-1] + arr[j] - arr[(i+j)//2]
+    dp = [w[0][i] for i in range(len(arr))]
+    cands = [0 for i in range(len(arr))]
+    for i in range(1, num):
+        for j in range(len(arr)-1, i-1, -1):
+            minEnum = cands[j]
+            maxEnum = j-1 if j == len(arr)-1 else cands[j+1]
+            minDistance = sys.maxsize
+            for k in range(minEnum, maxEnum+1):
+                cur = max(dp[k], w[k+1][j])
+                if cur <= minDistance:
+                    minDistance = cur
+                    cands[j] = k
+            dp[j] = minDistance
+    return dp[-1]
