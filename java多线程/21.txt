@@ -311,252 +311,287 @@ for (Node<K,V> b = findPredecessor(key, cmp), n = b.next;;) {
 int rnd = ThreadLocalRandom.nextSecondarySeed();
 抛硬币决定层次的思想很简单，就是通过抛硬币如果硬币为正面则层次level + 1 ，否则停止，如下：
 
-            // 抛硬币决定层次
-            while (((rnd >>>= 1) & 1) != 0)
-                ++level;
-在阐述SkipList插入节点的时候说明了，决定的层次level会分为两种情况进行处理，一是如果层次level大于最大的层次话则需要新增一层，否则就在相应层次以及小于该level的层次进行节点新增处理。
+// 抛硬币决定层次
+while (((rnd >>>= 1) & 1) != 0)
+    ++level;
+
+在阐述SkipList插入节点的时候说明了，决定的层次level会分为两种情况进行处理，
+一是如果层次level大于最大的层次话则需要新增一层，
+否则就在相应层次以及小于该level的层次进行节点新增处理。
 
 level <= headIndex.level
 
-            // 如果决定的层次level比最高层次head.level小，直接生成最高层次的index
-            // 由于需要确认每一层次的down，所以需要从最下层依次往上生成
-            if (level <= (max = h.level)) {
-                for (int i = 1; i <= level; ++i)
-                    idx = new ConcurrentSkipListMap.Index<K,V>(z, idx, null);
-            }
+// 如果决定的层次level比最高层次head.level小，直接生成最高层次的index
+// 由于需要确认每一层次的down，所以需要从最下层依次往上生成
+if (level <= (max = h.level)) {
+    for (int i = 1; i <= level; ++i)
+        idx = new ConcurrentSkipListMap.Index<K,V>(z, idx, null);
+}
  
 
-从底层开始，小于level的每一层都初始化一个index，每次的node都指向新加入的node，down指向下一层的item，右侧next全部为null。整个处理过程非常简单：为小于level的每一层初始化一个index，然后加入到原来的index链条中去。
+从底层开始，小于level的每一层都初始化一个index，每次的node都指向新加入的node，
+down指向下一层的item，右侧next全部为null。整个处理过程非常简单：
+为小于level的每一层初始化一个index，然后加入到原来的index链条中去。
 
 level > headIndex.level
 
-           // leve > head.level 则新增一层
-            else { // try to grow by one level
-                // 新增一层
-                level = max + 1;
+// leve > head.level 则新增一层
+else { // try to grow by one level
+    // 新增一层
+    level = max + 1;
 
-                // 初始化 level个item节点
-                @SuppressWarnings("unchecked")
-                ConcurrentSkipListMap.Index<K,V>[] idxs =
-                        (ConcurrentSkipListMap.Index<K,V>[])new ConcurrentSkipListMap.Index<?,?>[level+1];
-                for (int i = 1; i <= level; ++i)
-                    idxs[i] = idx = new ConcurrentSkipListMap.Index<K,V>(z, idx, null);
+    // 初始化 level个item节点
+    @SuppressWarnings("unchecked")
+    ConcurrentSkipListMap.Index<K,V>[] idxs =
+            (ConcurrentSkipListMap.Index<K,V>[])new ConcurrentSkipListMap.Index<?,?>[level+1];
+    for (int i = 1; i <= level; ++i)
+        idxs[i] = idx = new ConcurrentSkipListMap.Index<K,V>(z, idx, null);
 
-                //
-                for (;;) {
-                    h = head;
-                    int oldLevel = h.level;
-                    // 层次扩大了，需要重新开始（有新线程节点加入）
-                    if (level <= oldLevel) // lost race to add level
-                        break;
-                    // 新的头结点HeadIndex
-                    ConcurrentSkipListMap.HeadIndex<K,V> newh = h;
-                    ConcurrentSkipListMap.Node<K,V> oldbase = h.node;
-                    // 生成新的HeadIndex节点，该HeadIndex指向新增层次
-                    for (int j = oldLevel+1; j <= level; ++j)
-                        newh = new ConcurrentSkipListMap.HeadIndex<K,V>(oldbase, newh, idxs[j], j);
+    //
+    for (;;) {
+        h = head;
+        int oldLevel = h.level;
+        // 层次扩大了，需要重新开始（有新线程节点加入）
+        if (level <= oldLevel) // lost race to add level
+            break;
+        // 新的头结点HeadIndex
+        ConcurrentSkipListMap.HeadIndex<K,V> newh = h;
+        ConcurrentSkipListMap.Node<K,V> oldbase = h.node;
+        // 生成新的HeadIndex节点，该HeadIndex指向新增层次
+        for (int j = oldLevel+1; j <= level; ++j)
+            newh = new ConcurrentSkipListMap.HeadIndex<K,V>(oldbase, newh, idxs[j], j);
 
-                    // HeadIndex CAS替换
-                    if (casHead(h, newh)) {
-                        h = newh;
-                        idx = idxs[level = oldLevel];
-                        break;
-                    }
-                }
-当抛硬币决定的level大于最大层次level时，需要新增一层进行处理。处理逻辑如下：
-
-初始化一个对应的index数组，大小为level + 1，然后为每个单位都创建一个index，个中参数为：Node为新增的Z，down为下一层index，right为null
-通过for循环来进行扩容操作。从最高层进行处理，新增一个HeadIndex，个中参数：节点Node，down都为最高层的Node和HeadIndex，right为刚刚创建的对应层次的index，level为相对应的层次level。最后通过CAS把当前的head与新加入层的head进行替换。
-通过上面步骤我们发现，尽管已经找到了前辈节点，也将node插入了，也确定确定了层次并生成了相应的Index，但是并没有将这些Index插入到相应的层次当中，所以下面的代码就是将index插入到相对应的层当中。
-
-  // 从插入的层次level开始
-    splice: for (int insertionLevel = level;;) {
-        int j = h.level;
-        //  从headIndex开始
-        for (ConcurrentSkipListMap.Index<K,V> q = h, r = q.right, t = idx;;) {
-            if (q == null || t == null)
-                break splice;
-
-            // r != null；这里是找到相应层次的插入节点位置，注意这里只横向找
-            if (r != null) {
-                ConcurrentSkipListMap.Node<K,V> n = r.node;
-
-                int c = cpr(cmp, key, n.key);
-
-                // n.value == null ，解除关系，r右移
-                if (n.value == null) {
-                    if (!q.unlink(r))
-                        break;
-                    r = q.right;
-                    continue;
-                }
-
-                // key > n.key 右移
-                if (c > 0) {
-                    q = r;
-                    r = r.right;
-                    continue;
-                }
-            }
-
-            // 上面找到节点要插入的位置，这里就插入
-            // 当前层是最顶层
-            if (j == insertionLevel) {
-                // 建立联系
-                if (!q.link(r, t))
-                    break; // restart
-                if (t.node.value == null) {
-                    findNode(key);
-                    break splice;
-                }
-                // 标志的插入层 -- ，如果== 0 ，表示已经到底了，插入完毕，退出循环
-                if (--insertionLevel == 0)
-                    break splice;
-            }
-
-            // 上面节点已经插入完毕了，插入下一个节点
-            if (--j >= insertionLevel && j < level)
-                t = t.down;
-            q = q.down;
-            r = q.right;
+        // HeadIndex CAS替换
+        if (casHead(h, newh)) {
+            h = newh;
+            idx = idxs[level = oldLevel];
+            break;
         }
     }
-这段代码分为两部分看，一部分是找到相应层次的该节点插入的位置，第二部分在该位置插入，然后下移。
+
+当抛硬币决定的level大于最大层次level时，需要新增一层进行处理。处理逻辑如下：
+
+1.初始化一个对应的index数组，大小为level + 1，然后为每个单位都创建一个index，
+个中参数为：Node为新增的Z，down为下一层index，right为null
+
+1.通过for循环来进行扩容操作。从最高层进行处理，新增一个HeadIndex，
+个中参数：节点Node，down都为最高层的Node和HeadIndex，right为刚刚创建的对应层次的index，
+level为相对应的层次level。最后通过CAS把当前的head与新加入层的head进行替换。
+
+通过上面步骤我们发现，尽管已经找到了前辈节点，也将node插入了，
+也确定确定了层次并生成了相应的Index，但是并没有将这些Index插入到相应的层次当中，
+所以下面的代码就是将index插入到相对应的层当中。
+
+// 从插入的层次level开始
+splice: for (int insertionLevel = level;;) {
+    int j = h.level;
+    //  从headIndex开始
+    for (ConcurrentSkipListMap.Index<K,V> q = h, r = q.right, t = idx;;) {
+        if (q == null || t == null)
+            break splice;
+
+        // r != null；这里是找到相应层次的插入节点位置，注意这里只横向找
+        if (r != null) {
+            ConcurrentSkipListMap.Node<K,V> n = r.node;
+
+            int c = cpr(cmp, key, n.key);
+
+            // n.value == null ，解除关系，r右移
+            if (n.value == null) {
+                if (!q.unlink(r))
+                    break;
+                r = q.right;
+                continue;
+            }
+
+            // key > n.key 右移
+            if (c > 0) {
+                q = r;
+                r = r.right;
+                continue;
+            }
+        }
+
+        // 上面找到节点要插入的位置，这里就插入
+        // 当前层是最顶层
+        if (j == insertionLevel) {
+            // 建立联系
+            if (!q.link(r, t))
+                break; // restart
+            if (t.node.value == null) {
+                findNode(key);
+                break splice;
+            }
+            // 标志的插入层 -- ，如果== 0 ，表示已经到底了，插入完毕，退出循环
+            if (--insertionLevel == 0)
+                break splice;
+        }
+
+        // 上面节点已经插入完毕了，插入下一个节点
+        if (--j >= insertionLevel && j < level)
+            t = t.down;
+        q = q.down;
+        r = q.right;
+    }
+}
+
+这段代码分为两部分看，一部分是找到相应层次的该节点插入的位置，
+第二部分在该位置插入，然后下移。
 
 至此，ConcurrentSkipListMap的put操作到此就结束了。代码量有点儿多，这里总结下：
 
-首先通过findPredecessor()方法找到前辈节点Node
-根据返回的前辈节点以及key-value，新建Node节点，同时通过CAS设置next
-设置节点Node，再设置索引节点。采取抛硬币方式决定层次，如果所决定的层次大于现存的最大层次，则新增一层，然后新建一个Item链表。
-最后，将新建的Item链表插入到SkipList结构中。
+1.首先通过findPredecessor()方法找到前辈节点Node
+
+2.根据返回的前辈节点以及key-value，新建Node节点，同时通过CAS设置next
+
+3.设置节点Node，再设置索引节点。采取抛硬币方式决定层次，如果所决定的层次大于现存的最大层次，
+则新增一层，然后新建一个Item链表。
+
+4.最后，将新建的Item链表插入到SkipList结构中。
+
 get操作
 相比于put操作 ，get操作会简单很多，其过程其实就只相当于put操作的第一步：
 
-  private V doGet(Object key) {
-        if (key == null)
-            throw new NullPointerException();
-        Comparator<? super K> cmp = comparator;
-        outer: for (;;) {
-            for (ConcurrentSkipListMap.Node<K,V> b = findPredecessor(key, cmp), n = b.next;;) {
-                Object v; int c;
-                if (n == null)
-                    break outer;
-                ConcurrentSkipListMap.Node<K,V> f = n.next;
-                if (n != b.next)                // inconsistent read
-                    break;
-                if ((v = n.value) == null) {    // n is deleted
-                    n.helpDelete(b, f);
-                    break;
-                }
-                if (b.value == null || v == n)  // b is deleted
-                    break;
-                if ((c = cpr(cmp, key, n.key)) == 0) {
-                    @SuppressWarnings("unchecked") V vv = (V)v;
-                    return vv;
-                }
-                if (c < 0)
-                    break outer;
-                b = n;
-                n = f;
+private V doGet(Object key) {
+    if (key == null)
+        throw new NullPointerException();
+    Comparator<? super K> cmp = comparator;
+    outer: for (;;) {
+        for (ConcurrentSkipListMap.Node<K,V> b = findPredecessor(key, cmp), n = b.next;;) {
+            Object v; int c;
+            if (n == null)
+                break outer;
+            ConcurrentSkipListMap.Node<K,V> f = n.next;
+            if (n != b.next)                // inconsistent read
+                break;
+            if ((v = n.value) == null) {    // n is deleted
+                n.helpDelete(b, f);
+                break;
             }
+            if (b.value == null || v == n)  // b is deleted
+                break;
+            if ((c = cpr(cmp, key, n.key)) == 0) {
+                @SuppressWarnings("unchecked") V vv = (V)v;
+                return vv;
+            }
+            if (c < 0)
+                break outer;
+            b = n;
+            n = f;
         }
-        return null;
     }
-与put操作第一步相似，首先调用findPredecessor()方法找到前辈节点，然后顺着right一直往右找即可，同时在这个过程中同样承担了一个删除value为null的节点的职责。
+    return null;
+}
+
+
+与put操作第一步相似，首先调用findPredecessor()方法找到前辈节点，然后顺着right一直往右找即可，
+同时在这个过程中同样承担了一个删除value为null的节点的职责。
 
 remove操作
 remove操作为删除指定key节点，如下：
 
-    public V remove(Object key) {
-        return doRemove(key, null);
-    }
-直接调用doRemove()方法，这里remove有两个参数，一个是key，另外一个是value，所以doRemove方法即提供remove key，也提供同时满足key-value。
+public V remove(Object key) {
+    return doRemove(key, null);
+}
 
- final V doRemove(Object key, Object value) {
-        if (key == null)
-            throw new NullPointerException();
-        Comparator<? super K> cmp = comparator;
-        outer: for (;;) {
-            for (ConcurrentSkipListMap.Node<K,V> b = findPredecessor(key, cmp), n = b.next;;) {
-                Object v; int c;
-                if (n == null)
-                    break outer;
-                ConcurrentSkipListMap.Node<K,V> f = n.next;
+直接调用doRemove()方法，这里remove有两个参数，一个是key，另外一个是value，
+所以doRemove方法即提供remove key，也提供同时满足key-value。
 
-                // 不一致读，重新开始
-                if (n != b.next)                    // inconsistent read
-                    break;
+final V doRemove(Object key, Object value) {
+    if (key == null)
+        throw new NullPointerException();
+    Comparator<? super K> cmp = comparator;
+    outer: for (;;) {
+        for (ConcurrentSkipListMap.Node<K,V> b = findPredecessor(key, cmp), n = b.next;;) {
+            Object v; int c;
+            if (n == null)
+                break outer;
+            ConcurrentSkipListMap.Node<K,V> f = n.next;
 
-                // n节点已删除
-                if ((v = n.value) == null) {        // n is deleted
-                    n.helpDelete(b, f);
-                    break;
-                }
+            // 不一致读，重新开始
+            if (n != b.next)                    // inconsistent read
+                break;
 
-                // b节点已删除
-                if (b.value == null || v == n)      // b is deleted
-                    break;
-
-                if ((c = cpr(cmp, key, n.key)) < 0)
-                    break outer;
-
-                // 右移
-                if (c > 0) {
-                    b = n;
-                    n = f;
-                    continue;
-                }
-
-                /*
-                 * 找到节点
-                 */
-
-                // value != null 表示需要同时校验key-value值
-                if (value != null && !value.equals(v))
-                    break outer;
-
-                // CAS替换value
-                if (!n.casValue(v, null))
-                    break;
-                if (!n.appendMarker(f) || !b.casNext(n, f))
-                    findNode(key);                  // retry via findNode
-                else {
-                    // 清理节点
-                    findPredecessor(key, cmp);      // clean index
-
-                    // head.right == null表示该层已经没有节点，删掉该层
-                    if (head.right == null)
-                        tryReduceLevel();
-                }
-                @SuppressWarnings("unchecked") V vv = (V)v;
-                return vv;
+            // n节点已删除
+            if ((v = n.value) == null) {        // n is deleted
+                n.helpDelete(b, f);
+                break;
             }
+
+            // b节点已删除
+            if (b.value == null || v == n)      // b is deleted
+                break;
+
+            if ((c = cpr(cmp, key, n.key)) < 0)
+                break outer;
+
+            // 右移
+            if (c > 0) {
+                b = n;
+                n = f;
+                continue;
+            }
+
+            /*
+             * 找到节点
+             */
+
+            // value != null 表示需要同时校验key-value值
+            if (value != null && !value.equals(v))
+                break outer;
+
+            // CAS替换value
+            if (!n.casValue(v, null))
+                break;
+            if (!n.appendMarker(f) || !b.casNext(n, f))
+                findNode(key);                  // retry via findNode
+            else {
+                // 清理节点
+                findPredecessor(key, cmp);      // clean index
+
+                // head.right == null表示该层已经没有节点，删掉该层
+                if (head.right == null)
+                    tryReduceLevel();
+            }
+            @SuppressWarnings("unchecked") V vv = (V)v;
+            return vv;
         }
-        return null;
     }
-调用findPredecessor()方法找到前辈节点，然后通过右移，然后比较，找到后利用CAS把value替换为null，然后判断该节点是不是这层唯一的index，如果是的话，调用tryReduceLevel()方法把这层干掉，完成删除。
+    return null;
+}
 
-其实从这里可以看出，remove方法仅仅是把Node的value设置null，并没有真正删除该节点Node，其实从上面的put操作、get操作我们可以看出，他们在寻找节点的时候都会判断节点的value是否为null，如果为null，则调用unLink()方法取消关联关系，如下：
+调用findPredecessor()方法找到前辈节点，然后通过右移，然后比较，
+找到后利用CAS把value替换为null，然后判断该节点是不是这层唯一的index，
+如果是的话，调用tryReduceLevel()方法把这层干掉，完成删除。
 
-                    if (n.value == null) {
-                        if (!q.unlink(r))
-                            break;           // restart
-                        r = q.right;         // reread r
-                        continue;
-                    }
+其实从这里可以看出，remove方法仅仅是把Node的value设置null，并没有真正删除该节点Node，
+其实从上面的put操作、get操作我们可以看出，他们在寻找节点的时候都会判断节点的value是否为null，
+如果为null，则调用unLink()方法取消关联关系，如下：
+
+if (n.value == null) {
+    if (!q.unlink(r))
+        break;           // restart
+    r = q.right;         // reread r
+    continue;
+}
+
 size操作
-ConcurrentSkipListMap的size()操作和ConcurrentHashMap不同，它并没有维护一个全局变量来统计元素的个数，所以每次调用该方法的时候都需要去遍历。
+ConcurrentSkipListMap的size()操作和ConcurrentHashMap不同，
+它并没有维护一个全局变量来统计元素的个数，所以每次调用该方法的时候都需要去遍历。
 
-    public int size() {
-        long count = 0;
-        for (Node<K,V> n = findFirst(); n != null; n = n.next) {
-            if (n.getValidValue() != null)
-                ++count;
-        }
-        return (count >= Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) count;
+public int size() {
+    long count = 0;
+    for (Node<K,V> n = findFirst(); n != null; n = n.next) {
+        if (n.getValidValue() != null)
+            ++count;
     }
-调用findFirst()方法找到第一个Node，然后利用node的next去统计。最后返回统计数据，最多能返回Integer.MAX_VALUE。注意这里在线程并发下是安全的。
+    return (count >= Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) count;
+}
 
-ConcurrentSkipListMap过程其实不复杂，相比于ConcurrentHashMap而言，是简单的不能再简单了。对跳表SkipList熟悉的话，ConcurrentSkipListMap 应该是盘中餐了。
+调用findFirst()方法找到第一个Node，然后利用node的next去统计。最后返回统计数据，
+最多能返回Integer.MAX_VALUE。注意这里在线程并发下是安全的。
+
+ConcurrentSkipListMap过程其实不复杂，相比于ConcurrentHashMap而言，
+是简单的不能再简单了。对跳表SkipList熟悉的话，ConcurrentSkipListMap 应该是盘中餐了。
 
 下面，我们开始征服Java并发的阻塞队列
